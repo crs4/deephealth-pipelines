@@ -1,0 +1,10 @@
+stages:
+  extract-tissue:
+    cmd: docker -H ***REMOVED***  run --rm -p 8787:8787  -v /mnt/tdm-dic/digital_pathology/slides/PROMORT_NDPI_TEST:/data
+      -v /mnt/tdm-dic/slaid/output/PROMORT_NDPI_TEST:/output  ***REMOVED***:5000/slaid:0.8.1-develop-extract_tissue_eddl-1.1.0
+      parallel -l 0 -b 10000 /data/ /output
+    deps:
+    - ssh://ldic@***REMOVED***//mnt/tdm-dic/digital_pathology/slides/PROMORT_NDPI_TEST
+    outs:
+    - ssh://ldic@***REMOVED***//mnt/tdm-dic/slaid/output/PROMORT_NDPI_TEST:
+        persist: true
