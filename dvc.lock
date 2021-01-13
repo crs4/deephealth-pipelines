@@ -1,7 +1,8 @@
 extract-tissue:
-  cmd: docker -H ***REMOVED***  run --rm -p 8787:8787  -v /mnt/tdm-dic/digital_pathology/slides/PROMORT_NDPI_TEST:/data
+  cmd: docker -H ***REMOVED*** run --rm -p 8787:8787  -v /mnt/tdm-dic/digital_pathology/slides/PROMORT_NDPI_TEST://mnt/tdm-dic/digital_pathology/slides/PROMORT_NDPI_TEST
     -v /mnt/tdm-dic/slaid/output/PROMORT_NDPI_TEST:/output  ***REMOVED***:5000/slaid:0.8.1-develop-extract_tissue_eddl-1.1.0
-    parallel -l 0 -b 10000 /data/ /output
+    parallel -l 0 -b 10000 /mnt/tdm-dic/digital_pathology/slides/PROMORT_NDPI_TEST
+    /output
   deps:
   - path: ssh://ldic@***REMOVED***//mnt/tdm-dic/digital_pathology/slides/PROMORT_NDPI_TEST
     md5: 00db49702a43d02861f78fc1e0daf17e.dir
@@ -9,6 +10,6 @@ extract-tissue:
     nfiles: 6
   outs:
   - path: ssh://ldic@***REMOVED***//mnt/tdm-dic/slaid/output/PROMORT_NDPI_TEST
-    md5: 7f3287c6366a5ef7291baf020bc0d93d.dir
-    size: 102092789
-    nfiles: 529
+    md5: a3fb0f98d3e974feba572081ffddef27.dir
+    size: 164696567482
+    nfiles: 56216
