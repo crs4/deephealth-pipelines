@@ -29,14 +29,14 @@ with DAG('predictions',
         '0.9.2-ref_lazy-net-creation-tissue_model-extract_tissue_eddl_1.1',
         api_version='auto',
         auto_remove=True,
-        force_pull=True,
+        #  force_pull=True,
         user='root',
         command=[
-            'parallel', '-l', '8', '-f', 'tissue_8', '-o',
-            '/mnt/tdm-dic/slaid/airflow', '--scheduler',
-            '***REMOVED***:8786', '--overwrite',
-            'mnt/tdm-dic/users/cesco/o/slides/AN0021-01.mrxs'
+            'parallel', '-l', '0', '-f', 'tissue', '-o',
+            '/mnt/tdm-dic/slaid/airflow', '--overwrite',
+            '{{ dag_run.conf["input"] }}'
         ],
-        volumes=['/mnt/tdm-dic:/mnt/tdm-dic'],
+        #  volumes=['/mnt/tdm-dic:/mnt/tdm-dic'],
+        volumes=['/home/mauro/projects/slaid/tests/data:/data'],
         docker_url="unix://var/run/docker.sock",
         network_mode="bridge")
