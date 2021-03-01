@@ -21,7 +21,7 @@ default_args = {
 }
 with DAG('predictions',
          default_args=default_args,
-         schedule_interval="5 * * * *",
+         schedule_interval=None,
          catchup=False) as dag:
     t1 = DockerOperator(
         task_id='tissue_8',
@@ -37,6 +37,8 @@ with DAG('predictions',
             '{{ dag_run.conf["input"] }}'
         ],
         #  volumes=['/mnt/tdm-dic:/mnt/tdm-dic'],
-        volumes=['/home/mauro/projects/slaid/tests/data:/data'],
+        volumes=[
+            '/home/mauro/projects/deephealth-pipelines/airflow/dags:/opt/airflow/dags'
+        ],
         docker_url="unix://var/run/docker.sock",
         network_mode="bridge")
