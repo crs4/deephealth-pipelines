@@ -11,6 +11,7 @@ from airflow import DAG
 from airflow.contrib.sensors.file_sensor import FileSensor
 from airflow.decorators import task
 from airflow.operators.python import get_current_context
+from airflow.operators.bash import BashOperator
 
 default_args = {
     'owner': 'airflow',
@@ -31,19 +32,24 @@ with DAG('watch_dir',
                              poke_interval=5,
                              filepath='{{ dag_run["conf"]["dropbox"] }}')
 
+    move_files = BashOperator(
+        task_id='move_files',
+        bash_command=
+        'mv {{ dag_run["conf"]["dropbox"] }}/* {{ dag_run["conf"]["stage"] }}')
+
     @task
     def trigger_dag():
         ctx = get_current_context()
-        dirname = ctx['params']['dropbox']
+        dirname = ctx['params']['stage']
         output_dir = ctx['params']['output']
         with open('dags/predictions.yml') as f:
             params = yaml.load(f)
         for fname in os.listdir(dirname):
             params['slide'] = {'path': os.path.join(dirname, fname)}
             params['output'] = output_dir
-            subprocess.call([
+            subprocess.check_call([
                 'airflow', 'dags', 'trigger', 'predictions', '-c',
                 json.dumps(params)
             ])
 
-    file_sensor >> trigger_dag()
+    file_sensor >> move_files >> trigger_dag()
