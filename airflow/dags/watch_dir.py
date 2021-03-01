@@ -5,9 +5,12 @@ import os
 import subprocess
 from datetime import datetime, timedelta
 
+import yaml
+
 from airflow import DAG
 from airflow.contrib.sensors.file_sensor import FileSensor
 from airflow.decorators import task
+from airflow.operators.python import get_current_context
 
 default_args = {
     'owner': 'airflow',
@@ -26,16 +29,21 @@ with DAG('watch_dir',
          catchup=False) as dag:
     file_sensor = FileSensor(task_id="file_sensor",
                              poke_interval=5,
-                             filepath="/opt/airflow/dags/inputs")
+                             filepath='{{ dag_run["conf"]["dropbox"] }}')
 
     @task
     def trigger_dag():
-        dirname = "/opt/airflow/dags/inputs"
+        ctx = get_current_context()
+        dirname = ctx['params']['dropbox']
+        output_dir = ctx['params']['output']
+        with open('dags/predictions.yml') as f:
+            params = yaml.load(f)
         for fname in os.listdir(dirname):
-            print(fname)
+            params['slide'] = {'path': os.path.join(dirname, fname)}
+            params['output'] = output_dir
             subprocess.call([
                 'airflow', 'dags', 'trigger', 'predictions', '-c',
-                json.dumps({'input': os.path.join(dirname, fname)})
+                json.dumps(params)
             ])
 
     file_sensor >> trigger_dag()

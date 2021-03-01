@@ -1,0 +1,9 @@
+slide:
+  path: 
+tissue-level: 8
+tissue-label: tissue
+
+
+tumor-level: 0
+tumor-label: tumor
+output: 
