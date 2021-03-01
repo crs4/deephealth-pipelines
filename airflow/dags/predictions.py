@@ -33,12 +33,9 @@ with DAG('predictions',
         user='root',
         command=[
             'parallel', '-l', '0', '-f', 'tissue', '-o',
-            '/mnt/tdm-dic/slaid/airflow', '--overwrite',
-            '{{ dag_run.conf["input"] }}'
+            '{{ dag_run.conf["output"] }}', '--overwrite',
+            '{{ dag_run.conf["slide"]["path"] }}'
         ],
-        #  volumes=['/mnt/tdm-dic:/mnt/tdm-dic'],
-        volumes=[
-            '/home/mauro/projects/deephealth-pipelines/airflow/dags:/opt/airflow/dags'
-        ],
+        volumes=['/mnt/tdm-dic:/mnt/tdm-dic'],
         docker_url="unix://var/run/docker.sock",
         network_mode="bridge")
