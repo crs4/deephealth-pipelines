@@ -31,11 +31,14 @@ with DAG('predictions',
         auto_remove=True,
         #  force_pull=True,
         user='root',
-        command=[
-            'parallel', '-l', '0', '-f', 'tissue', '-o',
-            '{{ dag_run.conf["output"] }}', '--overwrite',
-            '{{ dag_run.conf["slide"]["path"] }}'
-        ],
+        command=
+            'parallel -l 0 -f tissue -o {{ dag_run.conf["output"] }} --overwrite'
+            ' {{ "--gpu" if "gpu" in dag_run.conf else ""  }} '
+            ' {{ dag_run.conf["gpu"] if "gpu" in dag_run.conf  else ""  }} '
+            ' {{ "--scheduler"   if "scheduler"  in dag_run.conf else "" }} '
+            ' {{   dag_run.conf["scheduler"] if "scheduler"  in dag_run.conf else "" }} '
+            ' {{ dag_run.conf["slide"]["path"] }}'
+        ,
         volumes=['/mnt/tdm-dic:/mnt/tdm-dic'],
         docker_url="unix://var/run/docker.sock",
         network_mode="bridge")

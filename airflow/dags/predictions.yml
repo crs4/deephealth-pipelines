@@ -7,3 +7,5 @@ tissue-label: tissue
 tumor-level: 0
 tumor-label: tumor
 output: 
+gpu: 0
+scheduler: tdmnode03.crs4.it:8786
