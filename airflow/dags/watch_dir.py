@@ -5,26 +5,28 @@ import os
 import shutil
 import time
 from datetime import datetime, timedelta
+from typing import List
 
 import yaml
-from typing import List
+
 from airflow import DAG
 from airflow.api.common.experimental.trigger_dag import trigger_dag
 from airflow.contrib.sensors.file_sensor import FileSensor
 from airflow.decorators import task
-from airflow.models import DagRun
+from airflow.models import DagRun, Variable
 #  from airflow.operators.bash import BashOperator
 from airflow.operators.python import get_current_context
 from airflow.utils import timezone
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
+from airflow.utils.dates import days_ago
 
 logger = logging.getLogger('watch-dir')
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
     'email': ['airflow@example.com'],
-    'start_date': datetime.now(),
+    'start_date': datetime(2019, 10, 13, 15, 50),
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
@@ -33,22 +35,17 @@ default_args = {
 
 with DAG('watch_dir',
          default_args=default_args,
-         schedule_interval=None,
-         catchup=False) as dag:
+         schedule_interval='* * * * *',
+         catchup=False,
+         max_active_runs=1) as dag:
     file_sensor = FileSensor(task_id="file_sensor",
                              poke_interval=5,
-                             filepath='{{ dag_run["conf"]["dropbox"] }}')
-
-    #  move_files = BashOperator(
-    #      task_id='move_files',
-    #      bash_command=
-    #      'mv {{ dag_run["conf"]["dropbox"] }}/* {{ dag_run["conf"]["stage"] }}')
+                             filepath='{{  var.value.dropbox }}')
 
     @task
     def move_files() -> List[str]:
-        ctx = get_current_context()
-        dropbox = ctx['params']['dropbox']
-        stage = ctx['params']['stage']
+        dropbox = Variable.get('dropbox')
+        stage = Variable.get('stage')
         incoming_files = os.listdir(dropbox)
         for fname in incoming_files:
             shutil.move(os.path.join(dropbox, fname), stage)
@@ -56,15 +53,14 @@ with DAG('watch_dir',
 
     @task
     def trigger_predictions(incoming_files: List[str]):
-        ctx = get_current_context()
-        stage = ctx['params']['stage']
-        output_dir = ctx['params']['output']
+        stage = Variable.get('stage')
+        output = Variable.get('output')
         with open('dags/predictions.yml') as f:
             params = yaml.load(f)
         dag_runs = []
         for fname in incoming_files:
             params['slide'] = {'path': os.path.join(stage, fname)}
-            params['output'] = output_dir
+            params['output'] = output
 
             execution_date = timezone.utcnow()
             run_id = DagRun.generate_run_id(DagRunType.MANUAL, execution_date)
