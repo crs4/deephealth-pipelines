@@ -2,17 +2,18 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+import shutil
 import time
 from datetime import datetime, timedelta
 
 import yaml
-
+from typing import List
 from airflow import DAG
 from airflow.api.common.experimental.trigger_dag import trigger_dag
 from airflow.contrib.sensors.file_sensor import FileSensor
 from airflow.decorators import task
 from airflow.models import DagRun
-from airflow.operators.bash import BashOperator
+#  from airflow.operators.bash import BashOperator
 from airflow.operators.python import get_current_context
 from airflow.utils import timezone
 from airflow.utils.state import State
@@ -38,21 +39,31 @@ with DAG('watch_dir',
                              poke_interval=5,
                              filepath='{{ dag_run["conf"]["dropbox"] }}')
 
-    move_files = BashOperator(
-        task_id='move_files',
-        bash_command=
-        'mv {{ dag_run["conf"]["dropbox"] }}/* {{ dag_run["conf"]["stage"] }}')
+    #  move_files = BashOperator(
+    #      task_id='move_files',
+    #      bash_command=
+    #      'mv {{ dag_run["conf"]["dropbox"] }}/* {{ dag_run["conf"]["stage"] }}')
 
     @task
-    def trigger_predictions():
+    def move_files() -> List[str]:
         ctx = get_current_context()
-        dirname = ctx['params']['stage']
+        dropbox = ctx['params']['dropbox']
+        stage = ctx['params']['stage']
+        incoming_files = os.listdir(dropbox)
+        for fname in incoming_files:
+            shutil.move(os.path.join(dropbox, fname), stage)
+        return incoming_files
+
+    @task
+    def trigger_predictions(incoming_files: List[str]):
+        ctx = get_current_context()
+        stage = ctx['params']['stage']
         output_dir = ctx['params']['output']
         with open('dags/predictions.yml') as f:
             params = yaml.load(f)
         dag_runs = []
-        for fname in os.listdir(dirname):
-            params['slide'] = {'path': os.path.join(dirname, fname)}
+        for fname in incoming_files:
+            params['slide'] = {'path': os.path.join(stage, fname)}
             params['output'] = output_dir
 
             execution_date = timezone.utcnow()
@@ -63,7 +74,8 @@ with DAG('watch_dir',
                     run_id=f'{fname}-{run_id}',
                     conf=params,
                 ))
-        while True:
+        completed = False
+        while not completed:
             time.sleep(10)
             for dag_run in dag_runs:
                 dag_run.refresh_from_db()
@@ -75,6 +87,8 @@ with DAG('watch_dir',
                         # TODO add logging
                         pass
                     dag_runs.remove(dag_run)
-            return True
+            if len(dag_runs) == 0:
+                completed = True
 
-    file_sensor >> move_files >> trigger_predictions()
+    incoming_files = move_files()
+    file_sensor >> incoming_files >> trigger_predictions(incoming_files)
