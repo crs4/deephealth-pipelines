@@ -7,3 +7,5 @@ tissue-label: tissue
 tumor-level: 0
 tumor-label: tumor
 output: 
+gpu: 0
+scheduler: ***REMOVED***:8786
