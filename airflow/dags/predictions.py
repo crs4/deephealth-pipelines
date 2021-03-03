@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from datetime import timedelta
+from datetime import datetime, timedelta
 
-from airflow import DAG
-from datetime import datetime
 #  from airflow.operators.docker_operator import DockerOperator
 from airflow.providers.docker.operators.docker import DockerOperator
 
+from airflow import DAG
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
 default_args = {
@@ -31,14 +30,16 @@ with DAG('predictions',
         auto_remove=True,
         #  force_pull=True,
         user='root',
-        command=
-            'parallel -l 0 -f tissue -o {{ dag_run.conf["output"] }} --overwrite'
-            ' {{ "--gpu" if "gpu" in dag_run.conf else ""  }} '
-            ' {{ dag_run.conf["gpu"] if "gpu" in dag_run.conf  else ""  }} '
-            ' {{ "--scheduler"   if "scheduler"  in dag_run.conf else "" }} '
-            ' {{   dag_run.conf["scheduler"] if "scheduler"  in dag_run.conf else "" }} '
-            ' {{ dag_run.conf["slide"]["path"] }}'
-        ,
+        command='parallel  -f tissue -o {{ dag_run.conf["output"] }} --overwrite'
+        ' {{ "--gpu" if "gpu" in dag_run.conf else ""  }} '
+        ' {{ dag_run.conf["gpu"] if "gpu" in dag_run.conf  else ""  }} '
+        ' {{ "-b" if "tissue-batch" in dag_run.conf else ""  }} '
+        ' {{ dag_run.conf["tissue-batch"] if "tissue-batch" in dag_run.conf  else ""  }} '
+        ' {{ "-l" if "tissue-level" in dag_run.conf else ""  }} '
+        ' {{ dag_run.conf["tissue-level"] if "tissue-level" in dag_run.conf  else ""  }} '
+        ' {{ "--scheduler"   if "scheduler"  in dag_run.conf else "" }} '
+        ' {{   dag_run.conf["scheduler"] if "scheduler"  in dag_run.conf else "" }} '
+        ' {{ dag_run.conf["slide"]["path"] }}',
         volumes=['/mnt/tdm-dic:/mnt/tdm-dic'],
         docker_url="unix://var/run/docker.sock",
         network_mode="bridge")
