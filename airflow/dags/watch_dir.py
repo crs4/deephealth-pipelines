@@ -8,8 +8,6 @@ from datetime import datetime, timedelta
 from typing import List
 
 import yaml
-
-from airflow import DAG
 from airflow.api.common.experimental.trigger_dag import trigger_dag
 from airflow.contrib.sensors.file_sensor import FileSensor
 from airflow.decorators import task
@@ -17,16 +15,19 @@ from airflow.models import DagRun, Variable
 #  from airflow.operators.bash import BashOperator
 from airflow.operators.python import get_current_context
 from airflow.utils import timezone
+from airflow.utils.dates import days_ago
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
-from airflow.utils.dates import days_ago
+
+from airflow import DAG
 
 logger = logging.getLogger('watch-dir')
+logger.setLevel = logging.INFO
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
     'email': ['airflow@example.com'],
-    'start_date': datetime(2019, 10, 13, 15, 50),
+    'start_date': datetime(2019, 1, 1),
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
@@ -36,6 +37,7 @@ default_args = {
 with DAG('watch_dir',
          default_args=default_args,
          schedule_interval='* * * * *',
+         start_date=datetime(2019, 1, 1),
          catchup=False,
          max_active_runs=1) as dag:
     file_sensor = FileSensor(task_id="file_sensor",
@@ -53,6 +55,7 @@ with DAG('watch_dir',
 
     @task
     def trigger_predictions(incoming_files: List[str]):
+        logger.info("incoming_files %s", incoming_files)
         stage = Variable.get('stage')
         output = Variable.get('output')
         with open('dags/predictions.yml') as f:
@@ -61,30 +64,41 @@ with DAG('watch_dir',
         for fname in incoming_files:
             params['slide'] = {'path': os.path.join(stage, fname)}
             params['output'] = output
-
             execution_date = timezone.utcnow()
-            run_id = DagRun.generate_run_id(DagRunType.MANUAL, execution_date)
-            dag_runs.append(
-                trigger_dag(
-                    dag_id='predictions',
-                    run_id=f'{fname}-{run_id}',
-                    conf=params,
-                ))
-        completed = False
-        while not completed:
-            time.sleep(10)
-            for dag_run in dag_runs:
-                dag_run.refresh_from_db()
-                state = dag_run.state
-                logger.info('state of dag run %s: %s', dag_run, state)
-                logger.info('dag_runs %s', dag_runs)
-                if state in [State.SUCCESS, State.FAILED]:
-                    if state == State.FAILED:
-                        # TODO add logging
-                        pass
-                    dag_runs.remove(dag_run)
-            if len(dag_runs) == 0:
-                completed = True
+            triggered_run_id = DagRun.generate_run_id(DagRunType.MANUAL,
+                                                      execution_date)
+            triggered_run_id = f'{fname}-{triggered_run_id}'
+
+            logger.info('triggering dag with id %s', triggered_run_id)
+            trigger_dag(dag_id='predictions',
+                        run_id=triggered_run_id,
+                        execution_date=execution_date,
+                        conf=params,
+                        replace_microseconds=False)
+            time.sleep(1)
+            #  execution_date = timezone.utcnow()
+            #  run_id = DagRun.generate_run_id(DagRunType.MANUAL, execution_date)
+            #  dag_runs.append(
+            #      trigger_dag(
+            #          dag_id='predictions',
+            #          run_id=fname,
+            #          conf=params,
+            #      ))
+        #  completed = False
+        #  while not completed:
+        #      time.sleep(10)
+        #      for dag_run in dag_runs:
+        #          dag_run.refresh_from_db()
+        #          state = dag_run.state
+        #          logger.info('state of dag run %s: %s', dag_run, state)
+        #          logger.info('dag_runs %s', dag_runs)
+        #          if state in [State.SUCCESS, State.FAILED]:
+        #              if state == State.FAILED:
+        #                  # TODO add logging
+        #                  pass
+        #              dag_runs.remove(dag_run)
+        #      if len(dag_runs) == 0:
+        #          completed = True
 
     incoming_files = move_files()
     file_sensor >> incoming_files >> trigger_predictions(incoming_files)

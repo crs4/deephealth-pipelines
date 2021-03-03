@@ -1,11 +1,12 @@
 slide:
   path: 
 tissue-level: 8
-tissue-label: tissue
+tissue-label: tissue_8
 
 
 tumor-level: 0
 tumor-label: tumor
 output: 
 gpu: 0
+tissue-batch: 100
 scheduler: tdmnode03.crs4.it:8786
