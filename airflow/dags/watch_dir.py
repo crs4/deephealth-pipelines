@@ -60,9 +60,8 @@ with DAG('watch_dir',
         output = Variable.get('output')
         with open('dags/predictions.yml') as f:
             params = yaml.load(f)
-        dag_runs = []
         for fname in incoming_files:
-            params['slide'] = {'path': os.path.join(stage, fname)}
+            params['slide'] = {'dirname': stage, 'filename': fname}
             params['output'] = output
             execution_date = timezone.utcnow()
             triggered_run_id = DagRun.generate_run_id(DagRunType.MANUAL,
