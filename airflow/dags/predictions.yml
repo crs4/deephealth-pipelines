@@ -1,5 +1,6 @@
 slide:
-  path: 
+  dirname: 
+  filename:
 tissue-level: 8
 tissue-label: tissue_8
 
