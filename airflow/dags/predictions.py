@@ -19,13 +19,14 @@ default_args = {
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
 }
-base_image = 'slaid:0.11.0-ref_batches'
+base_image = 'slaid:0.11.2-ref_batches'
 tissue_image = f'{base_image}-tissue_model-extract_tissue_eddl_1.1'
 tumor_image = f'{base_image}-tumor_model-promort_vgg16_weights_ep_41_vacc_0.91'
 
 with DAG('predictions',
          default_args=default_args,
          schedule_interval=None,
+         max_active_runs=2,
          catchup=False) as dag:
 
     tissue_low_res = DockerOperator(
@@ -60,7 +61,7 @@ with DAG('predictions',
         command='parallel  -f tissue -o {{ dag_run.conf["output"] }} --overwrite'
         ' {{ "--gpu" if "gpu" in dag_run.conf else ""  }} '
         ' {{ dag_run.conf["gpu"] if "gpu" in dag_run.conf  else ""  }} '
-        ' -F {{ dag_run.conf["tissue-label"]   }}>0.1 '
+        ' -F "{{ dag_run.conf["tissue-label"]   }}>0.1" '
         ' -l 0'
         ' {{ "--scheduler"   if "scheduler"  in dag_run.conf else "" }} '
         ' {{   dag_run.conf["scheduler"] if "scheduler"  in dag_run.conf else "" }} '
@@ -71,17 +72,18 @@ with DAG('predictions',
 
     tumor = DockerOperator(
         task_id='tumor',
-        image=tumor_image,
+        image=base_image,
         api_version='auto',
         auto_remove=True,
         #  force_pull=True,
         user='root',
         command=
         'parallel  -f {{ dag_run.conf["tumor-label"] }} -o {{ dag_run.conf["output"] }} --overwrite'
+        ' -m /home/mauro/slaid/slaid/resources/models/tumor_model-classify_tumor_eddl_0.1.bin  '
         ' {{ "--gpu" if "gpu" in dag_run.conf else ""  }} '
         ' {{ dag_run.conf["gpu"] if "gpu" in dag_run.conf  else ""  }} '
         '-b 5000'
-        ' -F {{ dag_run.conf["tissue-label"]   }}>0.6 '
+        ' -F "{{ dag_run.conf["tissue-label"]   }}>0.6" '
         ' -l {{ dag_run.conf["tumor-level"] }}'
         ' {{ "--scheduler"   if "scheduler"  in dag_run.conf else "" }} '
         ' {{   dag_run.conf["scheduler"] if "scheduler"  in dag_run.conf else "" }} '
