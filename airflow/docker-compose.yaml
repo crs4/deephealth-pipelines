@@ -50,6 +50,11 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'true'
+    AIRFLOW_VAR_DROPBOX: /mnt/tdm-dic/slaid/airflow/dropbox
+    AIRFLOW_VAR_STAGE: /mnt/tdm-dic/slaid/airflow/stage
+    AIRFLOW_VAR_OUT: /mnt/tdm-dic/slaid/airflow/out
+    AIRFLOW_CONN_FS_DEFAULT: fs://
+
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
