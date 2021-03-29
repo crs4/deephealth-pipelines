@@ -50,7 +50,11 @@ with DAG('watch_dir',
         stage = Variable.get('stage')
         incoming_files = os.listdir(dropbox)
         for fname in incoming_files:
-            shutil.move(os.path.join(dropbox, fname), stage)
+            logger.info('moving %s/%s to %s', dropbox, fname, stage)
+            try:
+                shutil.move(os.path.join(dropbox, fname), stage)
+            except Exception as ex:
+                logger.error(ex)
         return incoming_files
 
     @task
@@ -61,43 +65,22 @@ with DAG('watch_dir',
         with open('dags/predictions.yml') as f:
             params = yaml.load(f)
         for fname in incoming_files:
-            params['slide'] = {'dirname': stage, 'filename': fname}
-            params['output'] = output
-            execution_date = timezone.utcnow()
-            triggered_run_id = DagRun.generate_run_id(DagRunType.MANUAL,
-                                                      execution_date)
-            triggered_run_id = f'{fname}-{triggered_run_id}'
+            if not os.path.isdir(os.path.join(stage, fname)):
 
-            logger.info('triggering dag with id %s', triggered_run_id)
-            trigger_dag(dag_id='predictions',
-                        run_id=triggered_run_id,
-                        execution_date=execution_date,
-                        conf=params,
-                        replace_microseconds=False)
-            time.sleep(1)
-            #  execution_date = timezone.utcnow()
-            #  run_id = DagRun.generate_run_id(DagRunType.MANUAL, execution_date)
-            #  dag_runs.append(
-            #      trigger_dag(
-            #          dag_id='predictions',
-            #          run_id=fname,
-            #          conf=params,
-            #      ))
-        #  completed = False
-        #  while not completed:
-        #      time.sleep(10)
-        #      for dag_run in dag_runs:
-        #          dag_run.refresh_from_db()
-        #          state = dag_run.state
-        #          logger.info('state of dag run %s: %s', dag_run, state)
-        #          logger.info('dag_runs %s', dag_runs)
-        #          if state in [State.SUCCESS, State.FAILED]:
-        #              if state == State.FAILED:
-        #                  # TODO add logging
-        #                  pass
-        #              dag_runs.remove(dag_run)
-        #      if len(dag_runs) == 0:
-        #          completed = True
+                params['slide'] = {'dirname': stage, 'filename': fname}
+                params['output'] = output
+                execution_date = timezone.utcnow()
+                triggered_run_id = DagRun.generate_run_id(
+                    DagRunType.MANUAL, execution_date)
+                triggered_run_id = f'{fname}-{triggered_run_id}'
+
+                logger.info('triggering dag with id %s', triggered_run_id)
+                trigger_dag(dag_id='predictions',
+                            run_id=triggered_run_id,
+                            execution_date=execution_date,
+                            conf=params,
+                            replace_microseconds=False)
+                time.sleep(1)
 
     incoming_files = move_files()
     file_sensor >> incoming_files >> trigger_predictions(incoming_files)
