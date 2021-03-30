@@ -54,6 +54,7 @@ x-airflow-common:
     AIRFLOW_VAR_STAGE: /mnt/tdm-dic/slaid/airflow/stage
     AIRFLOW_VAR_OUT: /mnt/tdm-dic/slaid/airflow/out
     AIRFLOW_CONN_FS_DEFAULT: fs://
+    AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
 
   volumes:
     - ./dags:/opt/airflow/dags
