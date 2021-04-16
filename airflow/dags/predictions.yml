@@ -10,4 +10,4 @@ tumor-label: tumor
 output: 
 gpu: 0
 tissue-batch: 100
-scheduler: ***REMOVED***:8786
+scheduler: scheduler:8786

@@ -52,14 +52,14 @@ x-airflow-common:
     AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'true'
     AIRFLOW_VAR_DROPBOX: /mnt/tdm-dic/slaid/airflow/dropbox
     AIRFLOW_VAR_STAGE: /mnt/tdm-dic/slaid/airflow/stage
-    AIRFLOW_VAR_OUT: /mnt/tdm-dic/slaid/airflow/out
+    AIRFLOW_VAR_OUTPUT: /mnt/tdm-dic/slaid/airflow/out
     AIRFLOW_CONN_FS_DEFAULT: fs://
     AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
 
   volumes:
-    - ./dags:/opt/airflow/dags
-    - ./logs:/opt/airflow/logs
-    - ./plugins:/opt/airflow/plugins
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/logs:/opt/airflow/logs
+    - ./airflow/plugins:/opt/airflow/plugins
     - /mnt/tdm-dic:/mnt/tdm-dic
     - /var/run/docker.sock:/var/run/docker.sock
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
@@ -68,6 +68,9 @@ x-airflow-common:
       condition: service_healthy
     postgres:
       condition: service_healthy
+
+
+x-dask-base-image: &dask-base-image ***REMOVED***:5000/slaid:0.30.0-develop
 
 services:
   postgres:
@@ -139,5 +142,34 @@ services:
       retries: 5
     restart: always
 
+  scheduler:
+    image: *dask-base-image
+    environment:
+      - EXTRA_PIP_PACKAGES=git+https://github.com/dask/dask.git
+    hostname: dask-scheduler
+    ports:
+      - "8786:8786"
+      - "8787:8787"
+    command: ["dask-scheduler"]
+    entrypoint: ""
+
+  worker:
+    # image: ***REMOVED***:5000/slaid:0.9.2-ref_lazy-net-creation
+    image: *dask-base-image
+    environment:
+      - EXTRA_PIP_PACKAGES=git+https://github.com/dask/dask.git
+    hostname: dask-worker
+    command: ["dask-worker", "tcp://scheduler:8786", "--nthreads", "10"]
+    entrypoint: ""
+    volumes:
+      - /mnt/tdm-dic/:/mnt/tdm-dic
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - capabilities: ["gpu"]
+    #           device_ids: ["0"]
+
 volumes:
   postgres-db-volume:
+
