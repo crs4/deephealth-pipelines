@@ -8,6 +8,6 @@ tissue-label: tissue_8
 tumor-level: 0
 tumor-label: tumor
 output: 
-gpu: 0
+# gpu: 0
 tissue-batch: 100
 scheduler: scheduler:8786
