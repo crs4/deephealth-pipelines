@@ -19,10 +19,16 @@ default_args = {
     'retries': 1,
     'retry_delay': timedelta(minutes=1),
 }
+
 base_image = '***REMOVED***:5000/slaid:0.30.0-develop'
 tissue_image = f'{base_image}-tissue_model-extract_tissue_eddl_1.1'
 tumor_image = f'{base_image}-tumor_model-promort_vgg16_weights_ep_41_vacc_0.91'
 network = 'deephealth-pipelines_default'
+volumes = [
+    'deephealth-pipelines_stage-volume:/data/stage',
+    'deephealth-pipelines_output-volume:/data/output',
+]
+
 with DAG('predictions',
          default_args=default_args,
          schedule_interval=None,
@@ -46,8 +52,8 @@ with DAG('predictions',
         ' {{ "--scheduler"   if "scheduler"  in dag_run.conf else "" }} '
         ' {{   dag_run.conf["scheduler"] if "scheduler"  in dag_run.conf else "" }} '
         ' {{ dag_run.conf["slide"]["dirname"] }}/{{ dag_run.conf["slide"]["filename"] }}',
-        volumes=['/mnt/tdm-dic:/mnt/tdm-dic'],
-        docker_url="unix://var/run/docker.sock",
+        volumes=volumes,
+        docker_url="remote-api:2375",
         network_mode=network)
 
     tissue_high_res = DockerOperator(
@@ -67,8 +73,8 @@ with DAG('predictions',
         ' {{ "--scheduler"   if "scheduler"  in dag_run.conf else "" }} '
         ' {{   dag_run.conf["scheduler"] if "scheduler"  in dag_run.conf else "" }} '
         ' {{ dag_run.conf["output"] }}/{{ dag_run.conf["slide"]["filename"] }}.zarr',
-        volumes=['/mnt/tdm-dic:/mnt/tdm-dic'],
-        docker_url="unix://var/run/docker.sock",
+        volumes=volumes,
+        docker_url="remote-api:2375",
         network_mode=network)
 
     tumor = DockerOperator(
@@ -90,8 +96,8 @@ with DAG('predictions',
         ' {{ "--scheduler"   if "scheduler"  in dag_run.conf else "" }} '
         ' {{   dag_run.conf["scheduler"] if "scheduler"  in dag_run.conf else "" }} '
         ' {{ dag_run.conf["output"] }}/{{ dag_run.conf["slide"]["filename"] }}.zarr',
-        volumes=['/mnt/tdm-dic:/mnt/tdm-dic'],
-        docker_url="unix://var/run/docker.sock",
+        volumes=volumes,
+        docker_url="remote-api:2375",
         network_mode=network)
 
     tissue_low_res >> [tumor, tissue_high_res]
