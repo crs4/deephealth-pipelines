@@ -67,6 +67,14 @@ inputs:
     type: string
     inputBinding:
       prefix: -f
+  filter_slide:
+    type: Directory?
+    inputBinding:
+      prefix: --filter-slide
+  gpu:
+    type: int?
+    inputBinding:
+      prefix: --gpu
   # outdir:
   #   type: Directory
   #   inputBinding:
@@ -80,5 +88,4 @@ outputs:
   tissue:
     type: Directory
     outputBinding:
-      # glob: '$(inputs.src.basename).zarr'
-      glob: '*.zarr'
+      glob: '$(inputs.src.basename).zarr'

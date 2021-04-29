@@ -31,6 +31,7 @@ inputs:
   tumor-label:
     type: string
   tumor-filter: string
+  gpu: int
 
 outputs:
   tumor:
@@ -43,22 +44,24 @@ outputs:
 
 steps:
   extract-tissue:
-    run: /home/mauro/airflow/dags/extract_tissue.cwl
+    run: extract_tissue.cwl
     in:
       src: slide
       level: tissue-level
       label: tissue-label
+      gpu: gpu
     out: [tissue]
 
 
   classify-tumor:
-    run: /home/mauro/airflow/dags/classify-tumor.cwl
+    run: classify-tumor.cwl
     in:
       src: slide
       level: tumor-level
       label: tumor-label
       filter_slide: extract-tissue/tissue
       filter: tumor-filter
+      gpu: gpu
     out:
       [tumor]
 #

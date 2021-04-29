@@ -1,22 +1,27 @@
 #!/usr/bin/env cwl-runner
 
-cwlVersion: v1.0
+cwlVersion: v1.2
 class: CommandLineTool
 baseCommand: parallel
 requirements:
   InlineJavascriptRequirement: {}
   DockerRequirement:
-    dockerPull: ***REMOVED***:5000/slaid:0.30.3-develop-tumor_model-classify_tumor_eddl_0.1 
-  InitialWorkDirRequirement:
-    listing:
-      - entry:  $(inputs.src)
-      # - entry:  $(inputs.filter_slide)
-      #   writable: true
+    dockerPull: slaid:0.9.0-develop-tumor_model-promort_vgg16_weights_ep_41_vacc_0.91
 inputs:
   src:
     type: File
     inputBinding:
       position: 1
+    # secondaryFiles:
+    #   - pattern: |-
+    #       ${
+    #       return {
+    #         class: "Directory",
+    #         location: self.location.match(/.*\//)[0] + "/" + self.nameroot,
+    #         basename: self.nameroot};
+    #       }
+    #     required: false
+
   level:
     type: int
     inputBinding:
@@ -26,15 +31,19 @@ inputs:
     inputBinding:
       prefix: -f
   filter_slide:
-    type: Directory
+    type: Directory?
     inputBinding:
       prefix: --filter-slide
   filter:
     type: string
     inputBinding:
-      prefix: -F
+      prefix: -F?
+  gpu:
+    type: int?
+    inputBinding:
+      prefix: --gpu
 
-arguments: [ '--overwrite','-o', $(runtime.outdir)]
+arguments: ["-o", $(runtime.outdir), '-b', '1000000']
 outputs:
   tumor:
     type: Directory
