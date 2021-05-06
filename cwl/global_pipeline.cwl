@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 
-cwlVersion: v1.0
+cwlVersion: v1.1
 class: Workflow
 
 inputs:
@@ -22,7 +22,7 @@ outputs:
 steps:
   extract-tissue-low:
     run: &extract_tissue
-      cwlVersion: v1.0
+      cwlVersion: v1.1
       class: CommandLineTool
       baseCommand: parallel
       requirements:
@@ -37,6 +37,18 @@ steps:
           type: File
           inputBinding:
             position: 1
+          secondaryFiles:
+            - pattern: |-
+                ${
+                  if (self.nameext == '.mrxs') {
+                    return {
+                    class: "File",
+                    location: self.location.match(/.*\//)[0] + "/" + self.nameroot,
+                    basename: self.nameroot};
+                  }
+                  else return null;
+                }
+              required: false
         level:
           type: int
           inputBinding:
