@@ -20,17 +20,17 @@ JOB_CONF = \
 slide:
   class: File
   path: 
-tissue-low-level: 2
-tissue-low-label: tissue-low
-tissue-high-level: 1
-tissue-high-label: tissue-high
-tissue-high-filter: "tissue-low>0.8"
+tissue-low-level: 8
+tissue-low-label: tissue_low
+tissue-high-level: 0
+tissue-high-label: tissue_high
+tissue-high-filter: "tissue_low>0.8"
 gpu: 0
 
 
-# tumor-level: 0
-# tumor-label: tumor
-# tumor-filter: 'tissue>0.8'
+tumor-level: 0
+tumor-label: tumor
+tumor-filter: 'tissue_low>0.8'
     """
 
 logger = logging.getLogger('watch-dir')
