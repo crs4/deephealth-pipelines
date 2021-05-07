@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import logging
+import os
 import time
 from datetime import datetime, timedelta
 
+import requests
 import yaml
 
 from airflow import DAG
@@ -22,7 +24,7 @@ slide:
   path: 
 tissue-low-level: 8
 tissue-low-label: tissue_low
-tissue-high-level: 0
+tissue-high-level: 7
 tissue-high-label: tissue_high
 tissue-high-filter: "tissue_low>0.8"
 gpu: 0
@@ -50,6 +52,14 @@ with DAG('start_pipeline', default_args=default_args,
          schedule_interval=None) as dag:
 
     @task
+    def register_to_omeseadragon():
+        incoming_files = get_current_context()['params']['slides']
+        for fname in incoming_files:
+            requests.get(
+                'http://ome-seadragon.mobydick/ome_seadragon/mirax/register_slide',
+                params={'slide_name': os.path.splitext(fname)[0]})
+
+    @task
     def trigger_predictions():
         incoming_files = get_current_context()['params']['slides']
         logger.info("incoming_files %s", incoming_files)
@@ -69,4 +79,4 @@ with DAG('start_pipeline', default_args=default_args,
                         replace_microseconds=False)
             time.sleep(1)
 
-    trigger_predictions()
+    register_to_omeseadragon() >> trigger_predictions()
