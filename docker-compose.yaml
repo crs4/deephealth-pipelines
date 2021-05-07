@@ -5,7 +5,8 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
     - &airflow_env_var
         environment:
             - AIRFLOW_HOME=${AIRFLOW_HOME}
-            - CWL_INPUTS_FOLDER=${CWL_INPUTS_FOLDER}
+            # - CWL_INPUTS_FOLDER=${CWL_INPUTS_FOLDER}
+            - CWL_INPUTS_FOLDER=/stage
             - PROCESS_REPORT_URL=${PROCESS_REPORT_URL}
             - AIRFLOW__CORE__EXECUTOR=LocalExecutor
             - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
@@ -33,6 +34,8 @@ services:
     scheduler:
         image: mdrio/cwl-airflow-scheduler
         container_name: scheduler
+        extra_hosts:
+          - ome-seadragon.***REMOVED***:156.148.70.104
         volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
             - /var/run/docker.sock:/var/run/docker.sock
             - ${AIRFLOW_HOME}:${AIRFLOW_HOME}
@@ -40,6 +43,7 @@ services:
             - ${CWL_INPUTS_FOLDER}:${CWL_INPUTS_FOLDER}
             - ${CWL_OUTPUTS_FOLDER}:${CWL_OUTPUTS_FOLDER}
             - ${CWL_PICKLE_FOLDER}:${CWL_PICKLE_FOLDER}
+            - ${STAGE_DIR}:/stage
             - ./cwl/:/cwl
         # privileged: true                                               # maybe I don't actully need it here
         restart: always
