@@ -24,8 +24,7 @@ outputs:
     outputSource: extract-tissue-high/tissue
   tumor:
     type: Directory
-    outputSource: classify-tumor/tumor
-
+    outputSource: merge-arrays/group
 
 steps:
   extract-tissue-low:
@@ -169,4 +168,36 @@ steps:
       gpu: gpu
     out:
       [tumor]
+  
+  merge-arrays:
+    in: 
+     src1: extract-tissue-high/tissue
+     src2: classify-tumor/tumor
+    out:
+      [group]
+    run: 
+      cwlVersion: v1.1
+      class: CommandLineTool
+      baseCommand: cp
+      requirements:
+        InlineJavascriptRequirement: {}
+        InitialWorkDirRequirement:
+          listing:
+            -  $(inputs.src2)
+      inputs:
+        src1:
+          type: Directory
+          loadListing: deep_listing
+        src2:
+          type: Directory
+
+      arguments:
+        - -r
+        - $(inputs.src1.listing)
+        - $(inputs.src2)
+      outputs:
+        group:
+          type: Directory
+          outputBinding:
+            glob: $(inputs.src2.basename)
 
