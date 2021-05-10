@@ -3,12 +3,15 @@
 
 ## Configure
 
-To modify the location where data are stored, please modify the following sections in ```docker-compose.yaml```:
- * volumes > data-volume
- *  x-airflow-common > volumes
+To modify the location where data are stored, create ```.env``` file executing:
+```
+./create_env.sh
+```
+Then edit properly the output ```.env```. In particular, check the variable ```CWL_INPUTS_FOLDER```.
 
 
-If the host machine has gpus, decomment section ```services > worker> deploy``` and set the right ids for the gpus. gpu need to be configured also in file ```airflow/dags/predictions.yml```
+Edit env variable ```CWL_DOCKER_GPUS ``` for setting the gpus to be used on docker container used for predictions.
+
 
 ## Deploy
 
@@ -16,13 +19,13 @@ If the host machine has gpus, decomment section ```services > worker> deploy``` 
 git clone  http://mauro@repohub.crs4.it/DF/deephealth-pipelines
 cd deephealth-pipelines
 git checkout airflow
+docker-compose up -d
 ```
 
-Follow the instructions at https://airflow.apache.org/docs/apache-airflow/stable/start/docker.html, in particular the settings of the env file and the initialization.
+Check if ```init``` service exited with 0 code, otherwise restart it. It can fail for timing reason, typically sql tables do not exist yet.
 
-To visit Airflow, go to http://localhost:8181, user airflow, password airflow.
+To visit Airflow, go to http://localhost:8181, user admin, password admin.
 
-To visit Dask, go to http://localhost:8787.
 
 
 ## Upload data
@@ -34,12 +37,13 @@ cd slide-importer
 docker build -t slide-importer .
 ```
 
-To import a slide, type this command:
+To import a slide, run:
 ```
-docker run --rm -it -v deephealth-pipelines_stage-volume:/data/stage -v /PATH/TO/{SLIDE_DIR}:/upload --network deephealth-pipelines_default   slide-importer--server-url http://airflow-webserver:8080 --user airflow /upload/{SLIDE_FILENAME}
+. .env
+docker run --rm -it -v $CWL_INPUTS_FOLDER:$CWL_INPUTS_FOLDER -v /PATH/TO/SLIDE:/upload --network deephealth-pipelines_default     slide-importer --server-url http://webserver:8080 /upload/SLIDE_FILENAME --user admin
 ```
 
-It prompts asking the airflow password, the default is ```airflow```
+It prompts asking the airflow password, the default is ```admin```
 
 
 
