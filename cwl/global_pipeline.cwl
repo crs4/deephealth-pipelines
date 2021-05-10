@@ -20,11 +20,11 @@ inputs:
 
 outputs:
   tissue:
-    type: Directory
-    outputSource: extract-tissue-high/tissue
+    type: File
+    outputSource: zip-tissue/out
   tumor:
-    type: Directory
-    outputSource: merge-arrays/group
+    type: File
+    outputSource: zip-tumor/out
 
 steps:
   extract-tissue-low:
@@ -82,6 +82,7 @@ steps:
           type: Directory
           outputBinding:
             glob: '$(inputs.src.basename).zarr'
+            outputEval: ${self[0].basename=inputs.label + '.zarr'; return self;}
 
     in:
       src: slide
@@ -159,6 +160,7 @@ steps:
           type: Directory
           outputBinding:
             glob: '$(inputs.src.basename).zarr'
+            outputEval: ${self[0].basename=inputs.label + '.zarr'; return self;}
     in:
       src: slide
       level: tumor-level
@@ -169,35 +171,34 @@ steps:
     out:
       [tumor]
   
-  merge-arrays:
-    in: 
-     src1: extract-tissue-high/tissue
-     src2: classify-tumor/tumor
-    out:
-      [group]
-    run: 
+  zip-tissue:
+    run: &zip
       cwlVersion: v1.1
       class: CommandLineTool
-      baseCommand: cp
-      requirements:
-        InlineJavascriptRequirement: {}
-        InitialWorkDirRequirement:
-          listing:
-            -  $(inputs.src2)
+      baseCommand: python3
       inputs:
-        src1:
+        src:
           type: Directory
           loadListing: deep_listing
-        src2:
-          type: Directory
-
       arguments:
-        - -r
-        - $(inputs.src1.listing)
-        - $(inputs.src2)
+        - -m
+        - zipfile
+        - -c
+        - $(inputs.src.basename).zip
+        - $(inputs.src.listing)
       outputs:
-        group:
-          type: Directory
+        out:
+          type: File
           outputBinding:
-            glob: $(inputs.src2.basename)
+            glob: $(inputs.src.basename).zip
+    in:
+      src: extract-tissue-high/tissue
+    out: 
+      [out]
 
+  zip-tumor:
+    run: *zip
+    in:
+      src: classify-tumor/tumor
+    out: 
+      [out]
