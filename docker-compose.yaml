@@ -114,6 +114,7 @@ services:
           - ./scripts/:/scripts
         <<: *airflow_env_var
         # <<: *airflow_env_file
+        restart: on-failure
         entrypoint: bash
         command: [ "/scripts/init.sh"]
         depends_on:
