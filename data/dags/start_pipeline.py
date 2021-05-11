@@ -24,7 +24,7 @@ slide:
   path: 
 tissue-low-level: 8
 tissue-low-label: tissue_low
-tissue-high-level: 7
+tissue-high-level: 0
 tissue-high-label: tissue_high
 tissue-high-filter: "tissue_low>0.8"
 gpu: 0
