@@ -39,7 +39,7 @@ docker build -t slide-importer .
 
 To import a slide, run:
 ```
-. .env
+. .env #docker-compose env file for airflow
 docker run --rm -it -v $CWL_INPUTS_FOLDER:$CWL_INPUTS_FOLDER -v /PATH/TO/SLIDE:/upload --network deephealth-pipelines_default     slide-importer --server-url http://webserver:8080 /upload/SLIDE_FILENAME --user admin
 ```
 
