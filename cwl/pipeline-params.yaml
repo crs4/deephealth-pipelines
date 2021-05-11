@@ -1,0 +1,15 @@
+slide:
+  class: File
+  path: /home/mauro/slaid/tests/data/PH10023-1.thumb.tif
+tissue-low-level: 2
+tissue-low-label: tissue-low
+tissue-high-level: 1
+tissue-high-label: tissue-high
+tissue-high-filter: "tissue-low>0.8"
+gpu: 0
+
+
+# tumor-level: 0
+# tumor-label: tumor
+# tumor-filter: 'tissue>0.8'
+
