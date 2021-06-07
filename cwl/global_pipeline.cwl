@@ -7,10 +7,13 @@ inputs:
   slide: File
   tissue-low-level: int
   tissue-low-label: string
+  tissue-low-chunk: int?
 
   tissue-high-level: int
   tissue-high-label: string
   tissue-high-filter: string
+  tissue-high-chunk: int?
+  tumor-chunk: int?
 
   tumor-level: int
   tumor-label: string
@@ -31,11 +34,11 @@ steps:
     run: &extract_tissue
       cwlVersion: v1.1
       class: CommandLineTool
-      baseCommand: parallel
+      baseCommand: serial
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: slaid:0.40.0-fix_filter-slide-tissue_model-extract_tissue_eddl_1.1
+          dockerPull: slaid:0.51.1-develop-tissue_model-extract_tissue_eddl_1.1
         InitialWorkDirRequirement:
           listing:
             -  $(inputs.src)
@@ -76,7 +79,11 @@ steps:
           type: int?
           inputBinding:
             prefix: --gpu
-      arguments: ['--overwrite','-o', $(runtime.outdir)]
+        chunk:
+          type: int?
+          inputBinding:
+            prefix: --chunk
+      arguments: ["-o", $(runtime.outdir)]
       outputs:
         tissue:
           type: Directory
@@ -89,6 +96,7 @@ steps:
       level: tissue-low-level
       label: tissue-low-label
       gpu: gpu
+      chunk: tissue-low-chunk
     out: [tissue]
 
   extract-tissue-high:
@@ -100,6 +108,7 @@ steps:
       filter_slide: extract-tissue-low/tissue
       filter: tissue-high-filter
       gpu: gpu
+      chunk: tissue-high-chunk
     out: [tissue]
 
 
@@ -107,11 +116,11 @@ steps:
     run: 
       cwlVersion: v1.1
       class: CommandLineTool
-      baseCommand: parallel
+      baseCommand: serial
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: slaid:0.40.0-fix_filter-slide-tumor_model-classify_tumor_eddl_0.1
+          dockerPull: slaid:0.51.1-develop-tumor_model-classify_tumor_eddl_0.1
         InitialWorkDirRequirement:
           listing:
             -  $(inputs.src)
@@ -153,8 +162,11 @@ steps:
           type: int?
           inputBinding:
             prefix: --gpu
-
-      arguments: ["-o", $(runtime.outdir), '-b', '1000000']
+        chunk:
+          type: int?
+          inputBinding:
+            prefix: --chunk
+      arguments: ["-o", $(runtime.outdir)]
       outputs:
         tumor:
           type: Directory
@@ -168,6 +180,7 @@ steps:
       filter_slide: extract-tissue-low/tissue
       filter: tumor-filter
       gpu: gpu
+      chunk: tumor-chunk
     out:
       [tumor]
   
