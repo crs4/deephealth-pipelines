@@ -8,16 +8,19 @@ inputs:
   tissue-low-level: int
   tissue-low-label: string
   tissue-low-chunk: int?
+  tissue-low-batch: int?
 
   tissue-high-level: int
   tissue-high-label: string
   tissue-high-filter: string
   tissue-high-chunk: int?
-  tumor-chunk: int?
+  tissue-high-batch: int?
 
+  tumor-chunk: int?
   tumor-level: int
   tumor-label: string
   tumor-filter: string
+  tumor-batch: int?
 
   gpu: int?
 
@@ -83,6 +86,11 @@ steps:
           type: int?
           inputBinding:
             prefix: --chunk
+        batch:
+          type: int?
+          inputBinding:
+            prefix: --batch
+
       arguments: ["-o", $(runtime.outdir), '--writer', 'zip']
       outputs:
         tissue:
@@ -97,6 +105,7 @@ steps:
       label: tissue-low-label
       gpu: gpu
       chunk: tissue-low-chunk
+      batch: tissue-low-batch
     out: [tissue]
 
   extract-tissue-high:
@@ -109,6 +118,7 @@ steps:
       filter: tissue-high-filter
       gpu: gpu
       chunk: tissue-high-chunk
+      batch: tissue-high-batch
     out: [tissue]
 
 
@@ -166,6 +176,11 @@ steps:
           type: int?
           inputBinding:
             prefix: --chunk
+        batch:
+          type: int?
+          inputBinding:
+            prefix: --batch
+
       arguments: ["-o", $(runtime.outdir), '--writer', 'zip']
       outputs:
         tumor:
@@ -181,5 +196,6 @@ steps:
       filter: tumor-filter
       gpu: gpu
       chunk: tumor-chunk
+      batch: tumor-batch
     out:
       [tumor]
