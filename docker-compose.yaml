@@ -19,7 +19,8 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
             - AIRFLOW_USER=admin
             - AIRLFLOW_PASSWORD=admin
             - CWLDOCKER_GPUS=device=0
-            - STAGE_DIR=/mnt/tdm-dic/docker_volumes/ome_seadragon_mirax
+            - STAGE_DIR=${STAGE_DIR}
+            - OME_SEADRAGON_URL=${OME_SEADRAGON_URL}
 
     # - &airflow_env_file
     #     env_file:
