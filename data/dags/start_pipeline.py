@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 
 import requests
 import yaml
-
 from airflow import DAG
 from airflow.api.common.experimental.trigger_dag import trigger_dag
 from airflow.decorators import task
@@ -25,8 +24,11 @@ slide:
 tissue-low-level: 8
 tissue-low-label: tissue_low
 tissue-high-level: 0
+tissue-low-chunk: 256
 tissue-high-label: tissue_high
 tissue-high-filter: "tissue_low>0.8"
+tissue-high-chunk: 1536
+tumor-chunk: 1536
 gpu: 0
 
 
