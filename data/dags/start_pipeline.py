@@ -42,8 +42,10 @@ with DAG('start_pipeline', default_args=default_args,
     @task
     def trigger_predictions():
         incoming_files = get_current_context()['params']['slides']
+        params_to_update = get_current_context()['params']['params']
         logger.info("incoming_files %s", incoming_files)
         params = Variable.get('PREDICTIONS_PARAMS', deserialize_json=True)
+        params.update(params_to_update)
         for fname in incoming_files:
             params['slide']['path'] = fname
             execution_date = timezone.utcnow()
