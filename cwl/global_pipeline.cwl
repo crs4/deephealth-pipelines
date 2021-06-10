@@ -7,10 +7,13 @@ inputs:
   slide: File
   tissue-low-level: int
   tissue-low-label: string
+  tissue-low-chunk: int?
 
   tissue-high-level: int
   tissue-high-label: string
   tissue-high-filter: string
+  tissue-high-chunk: int?
+  tumor-chunk: int?
 
   tumor-level: int
   tumor-label: string
@@ -21,21 +24,21 @@ inputs:
 outputs:
   tissue:
     type: File
-    outputSource: zip-tissue/out
+    outputSource: extract-tissue-high/tissue
   tumor:
     type: File
-    outputSource: zip-tumor/out
+    outputSource: classify-tumor/tumor
 
 steps:
   extract-tissue-low:
     run: &extract_tissue
       cwlVersion: v1.1
       class: CommandLineTool
-      baseCommand: parallel
+      baseCommand: serial
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: slaid:0.40.0-fix_filter-slide-tissue_model-extract_tissue_eddl_1.1
+          dockerPull: slaid:0.54.0-ref_storage-tissue_model-extract_tissue_eddl_1.1
         InitialWorkDirRequirement:
           listing:
             -  $(inputs.src)
@@ -65,7 +68,7 @@ steps:
           inputBinding:
             prefix: -f
         filter_slide:
-          type: Directory?
+          type: File?
           inputBinding:
             prefix: --filter-slide
         filter:
@@ -76,19 +79,24 @@ steps:
           type: int?
           inputBinding:
             prefix: --gpu
-      arguments: ['--overwrite','-o', $(runtime.outdir)]
+        chunk:
+          type: int?
+          inputBinding:
+            prefix: --chunk
+      arguments: ["-o", $(runtime.outdir), '--writer', 'zip']
       outputs:
         tissue:
-          type: Directory
+          type: File
           outputBinding:
-            glob: '$(inputs.src.basename).zarr'
-            outputEval: ${self[0].basename=inputs.label + '.zarr'; return self;}
+            glob: '$(inputs.src.basename).zip'
+            outputEval: ${self[0].basename=inputs.label + '.zip'; return self;}
 
     in:
       src: slide
       level: tissue-low-level
       label: tissue-low-label
       gpu: gpu
+      chunk: tissue-low-chunk
     out: [tissue]
 
   extract-tissue-high:
@@ -100,6 +108,7 @@ steps:
       filter_slide: extract-tissue-low/tissue
       filter: tissue-high-filter
       gpu: gpu
+      chunk: tissue-high-chunk
     out: [tissue]
 
 
@@ -107,11 +116,11 @@ steps:
     run: 
       cwlVersion: v1.1
       class: CommandLineTool
-      baseCommand: parallel
+      baseCommand: serial
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: slaid:0.40.0-fix_filter-slide-tumor_model-classify_tumor_eddl_0.1
+          dockerPull: slaid:0.54.0-ref_storage-tumor_model-classify_tumor_eddl_0.1
         InitialWorkDirRequirement:
           listing:
             -  $(inputs.src)
@@ -142,7 +151,7 @@ steps:
           inputBinding:
             prefix: -f
         filter_slide:
-          type: Directory?
+          type: File?
           inputBinding:
             prefix: --filter-slide
         filter:
@@ -153,14 +162,17 @@ steps:
           type: int?
           inputBinding:
             prefix: --gpu
-
-      arguments: ["-o", $(runtime.outdir), '-b', '1000000']
+        chunk:
+          type: int?
+          inputBinding:
+            prefix: --chunk
+      arguments: ["-o", $(runtime.outdir), '--writer', 'zip']
       outputs:
         tumor:
-          type: Directory
+          type: File
           outputBinding:
-            glob: '$(inputs.src.basename).zarr'
-            outputEval: ${self[0].basename=inputs.label + '.zarr'; return self;}
+            glob: '$(inputs.src.basename).zip'
+            outputEval: ${self[0].basename=inputs.label + '.zip'; return self;}
     in:
       src: slide
       level: tumor-level
@@ -168,37 +180,6 @@ steps:
       filter_slide: extract-tissue-low/tissue
       filter: tumor-filter
       gpu: gpu
+      chunk: tumor-chunk
     out:
       [tumor]
-  
-  zip-tissue:
-    run: &zip
-      cwlVersion: v1.1
-      class: CommandLineTool
-      baseCommand: python3
-      inputs:
-        src:
-          type: Directory
-          loadListing: deep_listing
-      arguments:
-        - -m
-        - zipfile
-        - -c
-        - $(inputs.src.basename).zip
-        - $(inputs.src.listing)
-      outputs:
-        out:
-          type: File
-          outputBinding:
-            glob: $(inputs.src.basename).zip
-    in:
-      src: extract-tissue-high/tissue
-    out: 
-      [out]
-
-  zip-tumor:
-    run: *zip
-    in:
-      src: classify-tumor/tumor
-    out: 
-      [out]
