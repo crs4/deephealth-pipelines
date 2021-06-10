@@ -24,10 +24,10 @@ inputs:
 outputs:
   tissue:
     type: File
-    outputSource: zip-tissue/out
+    outputSource: extract-tissue-high/tissue
   tumor:
     type: File
-    outputSource: zip-tumor/out
+    outputSource: classify-tumor/tumor
 
 steps:
   extract-tissue-low:
@@ -38,7 +38,7 @@ steps:
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: slaid:0.51.1-develop-tissue_model-extract_tissue_eddl_1.1
+          dockerPull: slaid:0.54.0-ref_storage-tissue_model-extract_tissue_eddl_1.1
         InitialWorkDirRequirement:
           listing:
             -  $(inputs.src)
@@ -68,7 +68,7 @@ steps:
           inputBinding:
             prefix: -f
         filter_slide:
-          type: Directory?
+          type: File?
           inputBinding:
             prefix: --filter-slide
         filter:
@@ -83,13 +83,13 @@ steps:
           type: int?
           inputBinding:
             prefix: --chunk
-      arguments: ["-o", $(runtime.outdir)]
+      arguments: ["-o", $(runtime.outdir), '--writer', 'zip']
       outputs:
         tissue:
-          type: Directory
+          type: File
           outputBinding:
-            glob: '$(inputs.src.basename).zarr'
-            outputEval: ${self[0].basename=inputs.label + '.zarr'; return self;}
+            glob: '$(inputs.src.basename).zip'
+            outputEval: ${self[0].basename=inputs.label + '.zip'; return self;}
 
     in:
       src: slide
@@ -120,7 +120,7 @@ steps:
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: slaid:0.51.1-develop-tumor_model-classify_tumor_eddl_0.1
+          dockerPull: slaid:0.54.0-ref_storage-tumor_model-classify_tumor_eddl_0.1
         InitialWorkDirRequirement:
           listing:
             -  $(inputs.src)
@@ -151,7 +151,7 @@ steps:
           inputBinding:
             prefix: -f
         filter_slide:
-          type: Directory?
+          type: File?
           inputBinding:
             prefix: --filter-slide
         filter:
@@ -166,13 +166,13 @@ steps:
           type: int?
           inputBinding:
             prefix: --chunk
-      arguments: ["-o", $(runtime.outdir)]
+      arguments: ["-o", $(runtime.outdir), '--writer', 'zip']
       outputs:
         tumor:
-          type: Directory
+          type: File
           outputBinding:
-            glob: '$(inputs.src.basename).zarr'
-            outputEval: ${self[0].basename=inputs.label + '.zarr'; return self;}
+            glob: '$(inputs.src.basename).zip'
+            outputEval: ${self[0].basename=inputs.label + '.zip'; return self;}
     in:
       src: slide
       level: tumor-level
@@ -184,34 +184,44 @@ steps:
     out:
       [tumor]
   
-  zip-tissue:
-    run: &zip
-      cwlVersion: v1.1
-      class: CommandLineTool
-      baseCommand: python3
-      inputs:
-        src:
-          type: Directory
-          loadListing: deep_listing
-      arguments:
-        - -m
-        - zipfile
-        - -c
-        - $(inputs.src.basename).zip
-        - $(inputs.src.listing)
-      outputs:
-        out:
-          type: File
-          outputBinding:
-            glob: $(inputs.src.basename).zip
-    in:
-      src: extract-tissue-high/tissue
-    out: 
-      [out]
-
-  zip-tumor:
-    run: *zip
-    in:
-      src: classify-tumor/tumor
-    out: 
-      [out]
+  # zip-tissue:
+  #   run: &zip
+  #     cwlVersion: v1.1
+  #     class: CommandLineTool
+  #     baseCommand: find
+  #     requirements:
+  #       InitialWorkDirRequirement:
+  #         listing:
+  #           - $(inputs.src.listing)
+  #       DockerRequirement:
+  #         dockerPull: brandography/alpine-zip
+  #     inputs:
+  #       src:
+  #         type: Directory
+  #         loadListing: deep_listing
+  #     arguments:
+  #       - .
+  #       - -type
+  #       - f
+  #       - -exec
+  #       - zip
+  #       - "-0"
+  #       - $(inputs.src.basename).zip
+  #       - "{}"
+  #       - "+"
+  #     outputs:
+  #       out:
+  #         type: File
+  #         outputBinding:
+  #           glob: "*.zip"
+  #   in:
+  #     src: extract-tissue-high/tissue
+  #   out:
+  #     [out]
+  #
+  # zip-tumor:
+  #   run: *zip
+  #   in:
+  #     src: classify-tumor/tumor
+  #   out:
+  #     [out]
