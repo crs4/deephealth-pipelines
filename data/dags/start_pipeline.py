@@ -16,27 +16,6 @@ from airflow.utils.types import DagRunType
 
 from airflow import DAG
 
-JOB_CONF = \
-    """
-slide:
-  class: File
-  path: 
-tissue-low-level: 8
-tissue-low-label: tissue_low
-tissue-high-level: 0
-tissue-low-chunk: 256
-tissue-high-label: tissue_high
-tissue-high-filter: "tissue_low>0.8"
-tissue-high-chunk: 1536
-tumor-chunk: 1536
-gpu: 0
-
-
-tumor-level: 0
-tumor-label: tumor
-tumor-filter: 'tissue_low>0.8'
-    """
-
 logger = logging.getLogger('watch-dir')
 logger.setLevel = logging.INFO
 default_args = {
@@ -64,7 +43,7 @@ with DAG('start_pipeline', default_args=default_args,
     def trigger_predictions():
         incoming_files = get_current_context()['params']['slides']
         logger.info("incoming_files %s", incoming_files)
-        params = yaml.safe_load(JOB_CONF)
+        params = Variable.get('PREDICTIONS_PARAMS', deserialize_json=True)
         for fname in incoming_files:
             params['slide']['path'] = fname
             execution_date = timezone.utcnow()
