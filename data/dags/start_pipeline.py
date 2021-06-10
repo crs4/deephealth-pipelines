@@ -7,14 +7,14 @@ from datetime import datetime, timedelta
 
 import requests
 import yaml
-from airflow import DAG
 from airflow.api.common.experimental.trigger_dag import trigger_dag
 from airflow.decorators import task
-from airflow.models import DagRun
-#  from airflow.operators.bash import BashOperator
+from airflow.models import DagRun, Variable
 from airflow.operators.python import get_current_context
 from airflow.utils import timezone
 from airflow.utils.types import DagRunType
+
+from airflow import DAG
 
 JOB_CONF = \
     """
@@ -57,9 +57,8 @@ with DAG('start_pipeline', default_args=default_args,
     def register_to_omeseadragon():
         incoming_files = get_current_context()['params']['slides']
         for fname in incoming_files:
-            requests.get(
-                'http://ome-seadragon.mobydick/ome_seadragon/mirax/register_slide',
-                params={'slide_name': os.path.splitext(fname)[0]})
+            requests.get(Variable.get('OME_SEADRAGON_REGISTER_SLIDE'),
+                         params={'slide_name': os.path.splitext(fname)[0]})
 
     @task
     def trigger_predictions():
