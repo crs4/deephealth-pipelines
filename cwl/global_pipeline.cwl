@@ -23,6 +23,7 @@ inputs:
   tumor-batch: int?
 
   gpu: int?
+  mode: string?
 
 outputs:
   tissue:
@@ -37,11 +38,10 @@ steps:
     run: &extract_tissue
       cwlVersion: v1.1
       class: CommandLineTool
-      baseCommand: serial
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: slaid:0.54.0-ref_storage-tissue_model-extract_tissue_eddl_1.1
+          dockerPull: slaid:0.54.0-ref_runners-tissue_model-extract_tissue_eddl_1.1
         InitialWorkDirRequirement:
           listing:
             -  $(inputs.src)
@@ -90,6 +90,10 @@ steps:
           type: int?
           inputBinding:
             prefix: --batch
+        mode:
+          type: string?
+          inputBinding:
+            prefix: --mode
 
       arguments: ["-o", $(runtime.outdir), '--writer', 'zip']
       outputs:
@@ -106,6 +110,7 @@ steps:
       gpu: gpu
       chunk: tissue-low-chunk
       batch: tissue-low-batch
+      mode: mode
     out: [tissue]
 
   extract-tissue-high:
@@ -119,6 +124,7 @@ steps:
       gpu: gpu
       chunk: tissue-high-chunk
       batch: tissue-high-batch
+      mode: mode
     out: [tissue]
 
 
@@ -126,11 +132,10 @@ steps:
     run: 
       cwlVersion: v1.1
       class: CommandLineTool
-      baseCommand: serial
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: slaid:0.54.0-ref_storage-tumor_model-classify_tumor_eddl_0.1
+          dockerPull: slaid:0.54.0-ref_runners-tumor_model-classify_tumor_eddl_0.1
         InitialWorkDirRequirement:
           listing:
             -  $(inputs.src)
@@ -180,6 +185,10 @@ steps:
           type: int?
           inputBinding:
             prefix: --batch
+        mode:
+          type: string?
+          inputBinding:
+            prefix: --mode
 
       arguments: ["-o", $(runtime.outdir), '--writer', 'zip']
       outputs:
@@ -197,5 +206,6 @@ steps:
       gpu: gpu
       chunk: tumor-chunk
       batch: tumor-batch
+      mode: mode
     out:
       [tumor]
