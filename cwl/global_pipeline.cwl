@@ -41,7 +41,7 @@ steps:
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: slaid:0.54.0-ref_runners-tissue_model-extract_tissue_eddl_1.1
+          dockerPull: slaid:0.60.2-develop-tissue_model-extract_tissue_eddl_1.1
         InitialWorkDirRequirement:
           listing:
             -  $(inputs.src)
@@ -135,7 +135,7 @@ steps:
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: slaid:0.54.0-ref_runners-tumor_model-classify_tumor_eddl_0.1
+          dockerPull: slaid:0.60.2-develop-tumor_model-classify_tumor_eddl_0.1
         InitialWorkDirRequirement:
           listing:
             -  $(inputs.src)
