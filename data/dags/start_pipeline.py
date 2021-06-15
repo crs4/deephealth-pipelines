@@ -6,7 +6,6 @@ import time
 from datetime import datetime, timedelta
 
 import requests
-import yaml
 from airflow.api.common.experimental.trigger_dag import trigger_dag
 from airflow.decorators import task
 from airflow.models import DagRun, Variable
@@ -43,8 +42,14 @@ with DAG('start_pipeline', default_args=default_args,
     def trigger_predictions():
         incoming_files = get_current_context()['params']['slides']
         params_to_update = get_current_context()['params']['params']
-        logger.info("incoming_files %s", incoming_files)
-        params = Variable.get('PREDICTIONS_PARAMS', deserialize_json=True)
+        mode = params_to_update.get('mode') or Variable.get('PREDICTIONS_MODE')
+        if mode == 'serial':
+            params = Variable.get('SERIAL_PREDICTIONS_PARAMS',
+                                  deserialize_json=True)
+        else:
+            params = Variable.get('PARALLEL_PREDICTIONS_PARAMS',
+                                  deserialize_json=True)
+
         params.update(params_to_update)
         for fname in incoming_files:
             params['slide']['path'] = fname
