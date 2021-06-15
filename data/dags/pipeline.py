@@ -6,14 +6,13 @@ import time
 from datetime import datetime, timedelta
 
 import requests
+from airflow import DAG
 from airflow.api.common.experimental.trigger_dag import trigger_dag
 from airflow.decorators import task
 from airflow.models import DagRun, Variable
 from airflow.operators.python import get_current_context
 from airflow.utils import timezone
 from airflow.utils.types import DagRunType
-
-from airflow import DAG
 
 logger = logging.getLogger('watch-dir')
 logger.setLevel = logging.INFO
@@ -28,7 +27,7 @@ default_args = {
     'retry_delay': timedelta(minutes=1),
 }
 
-with DAG('start_pipeline', default_args=default_args,
+with DAG('pipeline', default_args=default_args,
          schedule_interval=None) as dag:
 
     @task
