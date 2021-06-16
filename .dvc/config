@@ -1,6 +1,0 @@
-[core]
-    analytics = false
-[cache]
-    ssh = sshcache
-['remote "sshcache"']
-    url = ssh://ldic@***REMOVED***//mnt/tdm-dic/slaid/dvc-cache
