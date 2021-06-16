@@ -73,7 +73,7 @@ class SlideImporter:
             "dag_run_id": f"predictions-{now.isoformat()}",
             "execution_date": now.isoformat(),
             "conf": {
-                'slides': [slide.name],
+                'slide': slide.name,
                 'params': params
             }
         }
