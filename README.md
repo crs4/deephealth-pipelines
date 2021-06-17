@@ -30,9 +30,7 @@ To visit Airflow, go to http://localhost:8181, user admin, password admin.
 
 ## Upload data
 
-Clone the slide-importer repo
 ```
-git clonegit@github.com:mdrio/slide_importer.git
 cd slide-importer
 docker build -t slide-importer .
 ```
