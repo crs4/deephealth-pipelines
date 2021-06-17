@@ -34,8 +34,10 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
     @task
     def register_to_omeseadragon():
         slide = get_current_context()['params']['slide']
-        requests.get(Variable.get('OME_SEADRAGON_REGISTER_SLIDE'),
-                     params={'slide_name': os.path.splitext(slide)[0]})
+        response = requests.get(
+            Variable.get('OME_SEADRAGON_REGISTER_SLIDE'),
+            params={'slide_name': os.path.splitext(slide)[0]})
+        response.raise_for_status()
         return slide
 
     @task
