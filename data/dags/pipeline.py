@@ -98,7 +98,7 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
             '--session-id', 'promort-dev_sessionid', 'slides_importer',
             '--slide-label', slide, '--extract-case', '--omero-id',
             str(omero_id), '--mirax', '--omero-host',
-            'http://mobydick.crs4.it:8090'
+            'http://mobydick.crs4.it:8090', '--ignore-duplicated'
         ]
         try:
             response = subprocess.check_output(command, stderr=subprocess.PIPE)
