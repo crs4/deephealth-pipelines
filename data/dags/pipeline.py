@@ -100,7 +100,11 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
             str(omero_id), '--mirax', '--omero-host',
             'http://***REMOVED***:8090'
         ]
-        subprocess.check_output(command)
+        try:
+            response = subprocess.check_output(command, stderr=subprocess.PIPE)
+        except subprocess.CalledProcessError as ex:
+            logger.error(ex.stderr)
+            raise ex
 
     slide_info_ = register_to_omeseadragon()
     #  trigger_predictions(slide_)
