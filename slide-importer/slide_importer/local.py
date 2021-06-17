@@ -55,11 +55,16 @@ class MRXSCopy(SlideCopy, name='mrxs'):
 
 
 class SlideImporter:
-    def __init__(self, server_url: str, user: str, password: str):
+    def __init__(self,
+                 server_url: str,
+                 user: str,
+                 password: str,
+                 wait: bool = False):
         self.server_url = server_url
         self._user = user
         self._password = password
         self._stage_dir = self._get_stage_dir()
+        self.wait = wait
 
     def _get_stage_dir(self):
         response = requests.get(os.path.join(self.server_url,
@@ -95,8 +100,12 @@ class SlideImporter:
                                  json=payload)
         logger.debug(response.json())
         response.raise_for_status()
-        state = response.json()['state']
-        dag_run_id = requests.utils.quote(response.json()['dag_run_id'])
+        if self.wait:
+            dag_run_id = requests.utils.quote(response.json()['dag_run_id'])
+            self._check_completion(slide, dag_id, dag_run_id)
+
+    def _check_completion(self, slide, dag_id, dag_run_id):
+        state = 'running'
         while state == 'running':
             time.sleep(10)
             response = requests.get(
@@ -124,17 +133,18 @@ def main(slides_path: str,
          server_url: str,
          user: str,
          log_level: str = 'info',
-         params: (str, 'p') = None):
+         params: (str, 'p') = None,
+         wait: bool = False):
     """
     :params params: json containing params to override when running
-    predictions on the imported slide
+    predictions on the imported slide. For debug only.
     """
     params = json.loads(params) if params else {}
     logging.basicConfig()
     logger.setLevel(getattr(logging, log_level.upper()))
     password = getpass()
-    SlideImporter(server_url, user,
-                  password).import_slides(Path(slides_path), params)
+    SlideImporter(server_url, user, password,
+                  wait).import_slides(Path(slides_path), params)
 
 
 if __name__ == '__main__':
