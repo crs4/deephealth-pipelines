@@ -32,17 +32,24 @@ class SlideCopy:
 
     def to(self, dest_dir: Path) -> Path:
         dest_path = Path(dest_dir, self.slide_path.name)
-        shutil.copy(self.slide_path.absolute().as_posix(),
-                    dest_path.absolute().as_posix())
+        self._cp(self.slide_path.absolute().as_posix(),
+                 dest_path.absolute().as_posix())
         return dest_path
+
+    def _cp(self, src, dest, as_tree=False):
+        func = shutil.copytree if as_tree else shutil.copy
+        try:
+            func(src, dest)
+        except (FileExistsError, shutil.SameFileError):
+            logger.warning('src %s already exists', src)
 
 
 class MRXSCopy(SlideCopy, name='mrxs'):
     def to(self, dest_dir: Path) -> Path:
         dest_path = Path(dest_dir, self.slide_path.stem)
-        shutil.copytree(
+        self._cp(
             Path(self.slide_path.parent.absolute(),
-                 self.slide_path.stem).absolute().as_posix(), dest_path)
+                 self.slide_path.stem).absolute().as_posix(), dest_path, True)
         return super().to(dest_dir)
 
 

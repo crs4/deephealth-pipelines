@@ -7,7 +7,7 @@ To modify the location where data are stored, create ```.env``` file executing:
 ```
 ./create_env.sh
 ```
-Then edit properly the output ```.env```. In particular, check the variable ```CWL_INPUTS_FOLDER``` and the ones set as TO_BE_CONFIGURED.
+Then edit properly the output ```.env```. In particular, check the variable ```CWL_INPUTS_FOLDER``` and the ones with no default values.
 
 
 Edit env variable ```CWL_DOCKER_GPUS ``` for setting the gpus to be used on docker container used for predictions.
