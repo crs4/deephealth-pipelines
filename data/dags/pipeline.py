@@ -33,13 +33,16 @@ default_args = {
     'retry_delay': timedelta(minutes=1),
 }
 
+OME_SEADRAGON_REGISTER_SLIDE = Variable.get('OME_SEADRAGON_REGISTER_SLIDE')
+OME_SEADRAGON_URL = Variable.get('OME_SEADRAGON_URL')
+
 with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
 
     @task(multiple_outputs=True)
     def register_to_omeseadragon() -> Dict[str, str]:
         slide = get_current_context()['params']['slide']
         slide_name = os.path.splitext(slide)[0]
-        response = requests.get(Variable.get('OME_SEADRAGON_REGISTER_SLIDE'),
+        response = requests.get(OME_SEADRAGON_REGISTER_SLIDE,
                                 params={'slide_name': slide_name})
         response.raise_for_status()
         omero_id = response.json()['mirax_index_omero_id']
@@ -97,8 +100,8 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
             '--user', connection.login, '--passwd', connection.password,
             '--session-id', 'promort-dev_sessionid', 'slides_importer',
             '--slide-label', slide, '--extract-case', '--omero-id',
-            str(omero_id), '--mirax', '--omero-host',
-            'http://mobydick.crs4.it:8090', '--ignore-duplicated'
+            str(omero_id), '--mirax', '--omero-host', OME_SEADRAGON_URL,
+            '--ignore-duplicated'
         ]
         try:
             response = subprocess.check_output(command, stderr=subprocess.PIPE)
