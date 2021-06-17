@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import shutil
+import time
 from getpass import getpass
 from pathlib import Path
 from typing import Dict, List
@@ -14,7 +15,7 @@ import pytz
 import requests
 from requests.auth import HTTPBasicAuth
 
-logger = logging.getLogger()
+logger = logging.getLogger('local-importer')
 
 _registry = {}
 
@@ -85,14 +86,30 @@ class SlideImporter:
             }
         }
         logger.debug('trigger dag with payload %s', payload)
+        dag_id = 'pipeline'
         response = requests.post(os.path.join(self.server_url,
-                                              'api/v1/dags/pipeline/dagRuns'),
+                                              f'api/v1/dags/{dag_id}/dagRuns'),
                                  auth=HTTPBasicAuth(self._user,
                                                     self._password),
                                  headers={'Content-type': 'application/json'},
                                  json=payload)
         logger.debug(response.json())
         response.raise_for_status()
+        state = response.json()['state']
+        dag_run_id = requests.utils.quote(response.json()['dag_run_id'])
+        while state == 'running':
+            time.sleep(10)
+            response = requests.get(
+                os.path.join(self.server_url,
+                             f'api/v1/dags/{dag_id}/dagRuns/{dag_run_id}'),
+                auth=HTTPBasicAuth(self._user, self._password),
+                headers={'Content-type': 'application/json'})
+            response.raise_for_status()
+            state = response.json()['state']
+        if state != 'success':
+            logger.error('pipeline failed for slide %s', slide)
+        else:
+            logger.info('pipeline run successfully for slide %s', slide)
 
     def _cp_files(self, slides: Path) -> List[Path]:
         logger.info('copying files %s to stage', slides)
