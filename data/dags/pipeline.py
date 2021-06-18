@@ -2,19 +2,23 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+import subprocess
 import time
 from datetime import datetime, timedelta
+from typing import Dict
 
 import requests
-from airflow import DAG
 from airflow.api.common.experimental.trigger_dag import trigger_dag
 from airflow.decorators import task
 from airflow.exceptions import AirflowException
+from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, Variable
 from airflow.operators.python import get_current_context
 from airflow.utils import timezone
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
+
+from airflow import DAG
 
 logger = logging.getLogger('watch-dir')
 logger.setLevel = logging.INFO
@@ -29,19 +33,25 @@ default_args = {
     'retry_delay': timedelta(minutes=1),
 }
 
+OME_SEADRAGON_REGISTER_SLIDE = Variable.get('OME_SEADRAGON_REGISTER_SLIDE')
+OME_SEADRAGON_URL = Variable.get('OME_SEADRAGON_URL')
+
 with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
 
-    @task
-    def register_to_omeseadragon():
+    @task(multiple_outputs=True)
+    def register_to_omeseadragon() -> Dict[str, str]:
         slide = get_current_context()['params']['slide']
-        response = requests.get(
-            Variable.get('OME_SEADRAGON_REGISTER_SLIDE'),
-            params={'slide_name': os.path.splitext(slide)[0]})
+        slide_name = os.path.splitext(slide)[0]
+        response = requests.get(OME_SEADRAGON_REGISTER_SLIDE,
+                                params={'slide_name': slide_name})
         response.raise_for_status()
-        return slide
+        omero_id = response.json()['mirax_index_omero_id']
+
+        return {'slide': slide, 'omero_id': omero_id}
 
     @task
-    def trigger_predictions(slide):
+    def trigger_predictions(slide_info: Dict[str, str]):
+        slide = slide_info['slide']
         allowed_states = [State.SUCCESS]
         failed_states = [State.FAILED]
         params_to_update = get_current_context()['params']['params']
@@ -67,7 +77,6 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
                               execution_date=execution_date,
                               conf={'job': params},
                               replace_microseconds=False)
-
         while True:
             time.sleep(60)
 
@@ -79,5 +88,28 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
             if state in allowed_states:
                 return dag_id, triggered_run_id
 
-    slide_ = register_to_omeseadragon()
-    trigger_predictions(slide_)
+    @task
+    def import_slide_to_promort(slide_info: Dict[str, str]):
+        connection = BaseHook.get_connection('promort')
+
+        slide = slide_info['slide']
+        omero_id = slide_info['omero_id']
+        image = 'lucalianas/promort_tools:dev'
+        command = [
+            'docker', 'run', '--rm', image, 'importer.py', '--host',
+            f'{connection.conn_type}://{connection.host}:{connection.port}',
+            '--user', connection.login, '--passwd', connection.password,
+            '--session-id', 'promort-dev_sessionid', 'slides_importer',
+            '--slide-label', slide, '--extract-case', '--omero-id',
+            str(omero_id), '--mirax', '--omero-host', OME_SEADRAGON_URL,
+            '--ignore-duplicated'
+        ]
+        try:
+            response = subprocess.check_output(command, stderr=subprocess.PIPE)
+        except subprocess.CalledProcessError as ex:
+            logger.error(ex.stderr)
+            raise ex
+
+    slide_info_ = register_to_omeseadragon()
+    trigger_predictions(slide_info_)
+    import_slide_to_promort(slide_info_)
