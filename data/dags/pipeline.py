@@ -47,10 +47,11 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
         response.raise_for_status()
         omero_id = response.json()['mirax_index_omero_id']
 
-        return {'slide': slide_name, 'omero_id': omero_id}
+        return {'slide': slide, 'omero_id': omero_id}
 
     @task
-    def trigger_predictions(slide):
+    def trigger_predictions(slide_info: Dict[str, str]):
+        slide = slide_info['slide']
         allowed_states = [State.SUCCESS]
         failed_states = [State.FAILED]
         params_to_update = get_current_context()['params']['params']
@@ -110,5 +111,5 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
             raise ex
 
     slide_info_ = register_to_omeseadragon()
-    #  trigger_predictions(slide_)
+    trigger_predictions(slide_info_)
     import_slide_to_promort(slide_info_)
