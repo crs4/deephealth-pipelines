@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import shutil
+import sys
 import time
 from getpass import getpass
 from pathlib import Path
@@ -14,8 +15,6 @@ import clize
 import pytz
 import requests
 from requests.auth import HTTPBasicAuth
-from tqdm import tqdm
-from tqdm.contrib.logging import logging_redirect_tqdm
 
 logger = logging.getLogger('local-importer')
 
@@ -24,6 +23,10 @@ _registry = {}
 
 def copy_slide(slide_path: Path, dest: Path) -> Path:
     return _registry.get(slide_path.suffix[1:], SlideCopy)(slide_path).to(dest)
+
+
+class PipelineFailure(Exception):
+    ...
 
 
 class SlideCopy:
@@ -75,20 +78,24 @@ class SlideImporter:
         response.raise_for_status()
         return response.json()['value']
 
-    def import_slides(self, slides: Path, params: Dict = None):
+    def import_slides(self, slides: Path, params: Dict = None) -> int:
         params = params or {}
         slides = [slides] if not slides.is_dir() else list(slides.iterdir())
+        faiures = 0
         if self.wait:
-            with logging_redirect_tqdm():
-                with tqdm(self._cp_files(slides), total=len(slides)) as pbar:
-                    for slide in pbar:
-                        pbar.set_description("Processing %s" % slide)
-                        self._trigger_predictions(slide, params)
-        else:
             for slide in self._cp_files(slides):
-                self._trigger_predictions(slide, params)
+                logger.info("Processing slide %s", slide)
+                try:
+                    self._run_pipeline(slide, params)
+                except PipelineFailure as ex:
+                    logger.error(ex)
+                    faiures += 1
+                else:
+                    logger.info('pipeline run SUCCESSFULLY for slide %s',
+                                slide)
+        return faiures
 
-    def _trigger_predictions(self, slide: Path, params: Dict):
+    def _run_pipeline(self, slide: Path, params: Dict):
         now = datetime.datetime.now()
         timezone = pytz.timezone("Europe/Rome")
         now = timezone.localize(now)
@@ -126,9 +133,7 @@ class SlideImporter:
             response.raise_for_status()
             state = response.json()['state']
         if state != 'success':
-            logger.error('pipeline failed for slide %s', slide)
-        else:
-            logger.info('pipeline run successfully for slide %s', slide)
+            raise PipelineFailure(f'pipeline failed for slide {slide}')
 
     def _cp_files(self, slides: List[Path]) -> List[Path]:
         logger.info('copying files %s to stage', slides)
@@ -152,8 +157,9 @@ def main(slides_path: str,
     logging.basicConfig()
     logger.setLevel(getattr(logging, log_level.upper()))
     password = getpass()
-    SlideImporter(server_url, user, password,
-                  wait).import_slides(Path(slides_path), params)
+    failures = SlideImporter(server_url, user, password,
+                             wait).import_slides(Path(slides_path), params)
+    sys.exit(failures)
 
 
 if __name__ == '__main__':
