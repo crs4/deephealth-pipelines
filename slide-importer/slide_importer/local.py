@@ -14,6 +14,8 @@ import clize
 import pytz
 import requests
 from requests.auth import HTTPBasicAuth
+from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 logger = logging.getLogger('local-importer')
 
@@ -75,8 +77,16 @@ class SlideImporter:
 
     def import_slides(self, slides: Path, params: Dict = None):
         params = params or {}
-        for slide in self._cp_files(slides):
-            self._trigger_predictions(slide, params)
+        slides = [slides] if not slides.is_dir() else list(slides.iterdir())
+        if self.wait:
+            with logging_redirect_tqdm():
+                with tqdm(self._cp_files(slides), total=len(slides)) as pbar:
+                    for slide in pbar:
+                        pbar.set_description("Processing %s" % slide)
+                        self._trigger_predictions(slide, params)
+        else:
+            for slide in self._cp_files(slides):
+                self._trigger_predictions(slide, params)
 
     def _trigger_predictions(self, slide: Path, params: Dict):
         now = datetime.datetime.now()
@@ -120,9 +130,8 @@ class SlideImporter:
         else:
             logger.info('pipeline run successfully for slide %s', slide)
 
-    def _cp_files(self, slides: Path) -> List[Path]:
+    def _cp_files(self, slides: List[Path]) -> List[Path]:
         logger.info('copying files %s to stage', slides)
-        slides = [slides] if not slides.is_dir() else slides.iterdir()
         for slide in slides:
             if not slide.is_dir():
                 yield copy_slide(slide, self._stage_dir)
