@@ -50,8 +50,8 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
         return {'slide': slide, 'omero_id': omero_id}
 
     @task
-    def trigger_predictions(slide_info: Dict[str, str]):
-        slide = slide_info['slide']
+    def trigger_predictions():
+        slide = get_current_context()['params']['slide']
         allowed_states = [State.SUCCESS]
         failed_states = [State.FAILED]
         params_to_update = get_current_context()['params']['params']
@@ -78,7 +78,7 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
                               conf={'job': params},
                               replace_microseconds=False)
         while True:
-            time.sleep(60)
+            time.sleep(10)
 
             dag_run.refresh_from_db()
             state = dag_run.state
@@ -111,5 +111,6 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
             raise ex
 
     slide_info_ = register_to_omeseadragon()
-    trigger_predictions(slide_info_)
-    import_slide_to_promort(slide_info_)
+    predictions = trigger_predictions()
+    slide_to_promort = import_slide_to_promort(slide_info_)
+    slide_to_promort >> predictions
