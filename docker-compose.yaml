@@ -20,12 +20,14 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
             - AIRLFLOW_PASSWORD=admin
             - CWLDOCKER_GPUS=device=0
             - STAGE_DIR=${STAGE_DIR}
+            - OUT_DIR=${CWL_OUTPUTS_FOLDER}
             - OME_SEADRAGON_URL=${OME_SEADRAGON_URL}
             - PROMORT_HOST=${PROMORT_HOST}
             - PROMORT_CONN_TYPE=${PROMORT_CONN_TYPE}
             - PROMORT_PORT=${PROMORT_PORT}
             - PROMORT_USER=${PROMORT_USER}
             - PROMORT_PASSWORD=${PROMORT_PASSWORD}
+            - PREDICTIONS_DIR=${PREDICTIONS_DIR}
 
     # - &airflow_env_file
     #     env_file:
@@ -55,6 +57,7 @@ services:
             - ${CWL_OUTPUTS_FOLDER}:${CWL_OUTPUTS_FOLDER}
             - ${CWL_PICKLE_FOLDER}:${CWL_PICKLE_FOLDER}
             - ./cwl/:/cwl
+            - ${PREDICTIONS_DIR}:${PREDICTIONS_DIR}
         # privileged: true                                               # maybe I don't actully need it here
         restart: always
         <<: *airflow_env_var
@@ -97,7 +100,6 @@ services:
     # starts MySQL server, creates empty ${MYSQL_DATABASE} with ${MYSQL_USER} and ${MYSQL_PASSWORD}
     mysql:
         image: mysql:5.7
-        container_name: mysql
         ports:
             - ${MYSQL_PORT}:3306
         volumes:

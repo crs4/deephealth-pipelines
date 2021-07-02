@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import json
 import logging
 import os
+import shutil
 import subprocess
 import time
 from datetime import datetime, timedelta
-from typing import Dict
+from typing import Dict, Tuple
 
 import requests
 from airflow.api.common.experimental.trigger_dag import trigger_dag
@@ -36,6 +38,12 @@ default_args = {
 OME_SEADRAGON_REGISTER_SLIDE = Variable.get('OME_SEADRAGON_REGISTER_SLIDE')
 OME_SEADRAGON_URL = Variable.get('OME_SEADRAGON_URL')
 
+
+def get_output_dir(dag_id, dag_run_id):
+    return os.path.join(Variable.get('OUT_DIR'), dag_id,
+                        dag_run_id).replace(':', '_').replace('+', '_')
+
+
 with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
 
     @task(multiple_outputs=True)
@@ -50,7 +58,7 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
         return {'slide': slide, 'omero_id': omero_id}
 
     @task
-    def trigger_predictions():
+    def trigger_predictions() -> Tuple[str, str]:
         slide = get_current_context()['params']['slide']
         allowed_states = [State.SUCCESS]
         failed_states = [State.FAILED]
@@ -104,13 +112,35 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
             str(omero_id), '--mirax', '--omero-host', OME_SEADRAGON_URL,
             '--ignore-duplicated'
         ]
-        try:
-            response = subprocess.check_output(command, stderr=subprocess.PIPE)
-        except subprocess.CalledProcessError as ex:
-            logger.error(ex.stderr)
-            raise ex
+        subprocess.check_output(command, stderr=subprocess.PIPE)
+
+    @task
+    def register_predictions(predictions_info):
+        dag_id, dag_run_id = predictions_info
+        output_dir = get_output_dir(dag_id, dag_run_id)
+        predictions_dir = Variable.get('PREDICTIONS_DIR')
+        ome_seadragon_register_predictions = Variable.get(
+            'OME_SEADRAGON_REGISTER_PREDICTIONS')
+
+        with open(os.path.join(output_dir, 'workflow_report.json'),
+                  'r') as report_file:
+            report = json.load(report_file)
+
+        for prediction in ['tissue', 'tumor']:
+            location = report[prediction]['location'].replace('file://', '')
+            basename = os.path.basename(location)
+            shutil.copy(location, os.path.join(predictions_dir, basename))
+
+            response = requests.get(ome_seadragon_register_predictions,
+                                    params={
+                                        'dataset_label': basename,
+                                        'keep_archive': True
+                                    })
+            response.raise_for_status()
+            logger.info(response.json())
 
     slide_info_ = register_to_omeseadragon()
     predictions = trigger_predictions()
     slide_to_promort = import_slide_to_promort(slide_info_)
     slide_to_promort >> predictions
+    register_predictions(predictions)
