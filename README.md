@@ -13,6 +13,17 @@ Then edit properly the output ```.env```. In particular, check the variable ```C
 Edit env variable ```CWL_DOCKER_GPUS ``` for setting the gpus to be used on docker container used for predictions.
 
 
+For configuring extra hosts preserving sensitive data, it is possibile to add the informatsion in a docker-compose.ovverride.yml file.
+Example:
+
+```
+services:
+    scheduler:
+        extra_hosts:
+          - <SERVER NAME>:<SERVER IP>
+```
+
+
 ## Deploy
 
 ```

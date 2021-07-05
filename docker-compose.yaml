@@ -47,8 +47,6 @@ services:
     scheduler:
         image: mdrio/cwl-airflow-scheduler
         container_name: scheduler
-        extra_hosts:
-          - ome-seadragon.mobydick:156.148.70.104
         volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
             - /var/run/docker.sock:/var/run/docker.sock
             - ${AIRFLOW_HOME}:${AIRFLOW_HOME}
