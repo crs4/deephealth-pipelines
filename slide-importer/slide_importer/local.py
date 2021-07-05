@@ -82,17 +82,13 @@ class SlideImporter:
         params = params or {}
         slides = [slides] if not slides.is_dir() else list(slides.iterdir())
         faiures = 0
-        if self.wait:
-            for slide in self._cp_files(slides):
-                logger.info("Processing slide %s", slide)
-                try:
-                    self._run_pipeline(slide, params)
-                except PipelineFailure as ex:
-                    logger.error(ex)
-                    faiures += 1
-                else:
-                    logger.info('pipeline run SUCCESSFULLY for slide %s',
-                                slide)
+        for slide in self._cp_files(slides):
+            logger.info("Processing slide %s", slide)
+            try:
+                self._run_pipeline(slide, params)
+            except PipelineFailure as ex:
+                logger.error(ex)
+                faiures += 1
         return faiures
 
     def _run_pipeline(self, slide: Path, params: Dict):
@@ -134,6 +130,7 @@ class SlideImporter:
             state = response.json()['state']
         if state != 'success':
             raise PipelineFailure(f'pipeline failed for slide {slide}')
+        logger.info('pipeline run SUCCESSFULLY for slide %s', slide)
 
     def _cp_files(self, slides: List[Path]) -> List[Path]:
         logger.info('copying files %s to stage', slides)
