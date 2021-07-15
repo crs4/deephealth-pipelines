@@ -35,7 +35,7 @@ docker-compose up -d
 
 Check if ```init``` service exited with 0 code, otherwise restart it. It can fail for timing reason, typically sql tables do not exist yet.
 
-To visit Airflow, go to http://localhost:8181, user admin, password admin.
+To visit Airflow, go to http://localhost:<AIRFLOW_WEBSERVER_PORT>, user admin, password admin.
 
 
 
