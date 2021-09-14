@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import time
 from datetime import datetime, timedelta
+from enum import Enum
 from typing import Dict, Tuple
 
 import requests
@@ -38,6 +39,24 @@ default_args = {
 OME_SEADRAGON_REGISTER_SLIDE = Variable.get('OME_SEADRAGON_REGISTER_SLIDE')
 OME_SEADRAGON_URL = Variable.get('OME_SEADRAGON_URL')
 
+PROMORT_TOOLS_IMG = 'lucalianas/promort_tools:dev'
+
+
+class Prediction(Enum):
+    TISSUE = 'tissue'
+    TUMOR = 'tumor'
+
+
+def get_prediction_path(prediction: Prediction, dag_id: str,
+                        dag_run_id: str) -> str:
+    output_dir = get_output_dir(dag_id, dag_run_id)
+
+    with open(os.path.join(output_dir, 'workflow_report.json'),
+              'r') as report_file:
+        report = json.load(report_file)
+
+    return report[prediction.value]['location'].replace('file://', '')
+
 
 def get_output_dir(dag_id, dag_run_id):
     return os.path.join(Variable.get('OUT_DIR'), dag_id,
@@ -47,11 +66,13 @@ def get_output_dir(dag_id, dag_run_id):
 with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
 
     @task(multiple_outputs=True)
-    def register_to_omeseadragon() -> Dict[str, str]:
+    def register_slide_to_omeseadragon() -> Dict[str, str]:
         slide = get_current_context()['params']['slide']
         slide_name = os.path.splitext(slide)[0]
         response = requests.get(OME_SEADRAGON_REGISTER_SLIDE,
                                 params={'slide_name': slide_name})
+
+        logger.info('response.text %s', response.text)
         response.raise_for_status()
         omero_id = response.json()['mirax_index_omero_id']
 
@@ -102,9 +123,9 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
 
         slide = slide_info['slide']
         omero_id = slide_info['omero_id']
-        image = 'lucalianas/promort_tools:dev'
         command = [
-            'docker', 'run', '--rm', image, 'importer.py', '--host',
+            'docker', 'run', '--rm', PROMORT_TOOLS_IMG, 'importer.py',
+            '--host',
             f'{connection.conn_type}://{connection.host}:{connection.port}',
             '--user', connection.login, '--passwd', connection.password,
             '--session-id', '***REMOVED***', 'slides_importer',
@@ -115,8 +136,8 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
         subprocess.check_output(command, stderr=subprocess.PIPE)
 
     @task
-    def register_predictions(predictions_info):
-        dag_id, dag_run_id = predictions_info
+    def register_predictions_to_omero(dag_info):
+        dag_id, dag_run_id = dag_info
         output_dir = get_output_dir(dag_id, dag_run_id)
         predictions_dir = Variable.get('PREDICTIONS_DIR')
         ome_seadragon_register_predictions = Variable.get(
@@ -126,6 +147,7 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
                   'r') as report_file:
             report = json.load(report_file)
 
+        res = {}
         for prediction in ['tissue', 'tumor']:
             location = report[prediction]['location'].replace('file://', '')
             basename = os.path.basename(location)
@@ -137,10 +159,36 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
                                         'keep_archive': True
                                     })
             response.raise_for_status()
-            logger.info(response.json())
+            res[prediction] = response.json()
 
-    slide_info_ = register_to_omeseadragon()
-    predictions = trigger_predictions()
+        logger.info(res)
+        return res
+
+    @task
+    def import_predictions_to_promort(slide_info: Dict[str, str],
+                                      predictions_info: Dict[str, str]):
+
+        slide = slide_info['slide']
+        connection = BaseHook.get_connection('promort')
+        for prediction_name, data in predictions_info.items():
+            command = [
+                'docker', 'run', '--rm', PROMORT_TOOLS_IMG, 'importer.py',
+                '--host',
+                f'{connection.conn_type}://{connection.host}:{connection.port}',
+                '--user', connection.login, '--passwd', connection.password,
+                '--session-id', '***REMOVED***',
+                'predictions_importer', '--prediction-label', data['label'],
+                '--slide-label', slide, '--prediction-type',
+                prediction_name.upper(), '--omero-id',
+                str(data['omero_id'])
+            ]
+
+            logger.info('command %s', command)
+            subprocess.check_output(command, stderr=subprocess.PIPE)
+
+    slide_info_ = register_slide_to_omeseadragon()
+    dag_info = trigger_predictions()
     slide_to_promort = import_slide_to_promort(slide_info_)
-    slide_to_promort >> predictions
-    register_predictions(predictions)
+    slide_to_promort >> dag_info
+    predictions_info = register_predictions_to_omero(dag_info)
+    import_predictions_to_promort(slide_info_, predictions_info)
