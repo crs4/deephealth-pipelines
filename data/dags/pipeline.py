@@ -95,7 +95,7 @@ def _get_prediction_location(prediction, output_dir):
 with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
 
     @task(multiple_outputs=True)
-    def register_slide_to_omeseadragon() -> Dict[str, str]:
+    def add_slide_to_omero() -> Dict[str, str]:
         slide = get_current_context()['params']['slide']
         slide_name = os.path.splitext(slide)[0]
         response = requests.get(OME_SEADRAGON_REGISTER_SLIDE,
@@ -108,7 +108,7 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
         return {'slide': slide, 'omero_id': omero_id}
 
     @task
-    def trigger_predictions() -> Dict[str, str]:
+    def predictions() -> Dict[str, str]:
         slide = get_current_context()['params']['slide']
         allowed_states = [State.SUCCESS]
         failed_states = [State.FAILED]
@@ -147,7 +147,7 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
                 return {'dag_id': dag_id, 'dag_run_id': triggered_run_id}
 
     @task
-    def import_slide_to_promort(slide_info: Dict[str, str]):
+    def add_slide_to_promort(slide_info: Dict[str, str]):
         connection = BaseHook.get_connection('promort')
 
         slide = slide_info['slide']
@@ -164,7 +164,7 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
         ]
         subprocess.check_output(command, stderr=subprocess.PIPE)
 
-    def register_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
+    def add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
         dag_id, dag_run_id = dag_info['dag_id'], dag_info['dag_run_id']
         logger.info(
             'register prediction %s to omero with dag_id %s, dag_run_id %s',
@@ -173,8 +173,8 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
         location = _get_prediction_location(prediction, output_dir)
         return _register_prediction_to_omero(location)
 
-    def import_prediction_to_promort(prediction, slide: str, label: str,
-                                     omero_id: str):
+    def add_prediction_to_promort(prediction, slide: str, label: str,
+                                  omero_id: str):
 
         connection = BaseHook.get_connection('promort')
         command = [
@@ -191,20 +191,21 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
         logger.info('command %s', command)
         subprocess.check_output(command, stderr=subprocess.PIPE)
 
-    slide_info_ = register_slide_to_omeseadragon()
-    slide = slide_info_['slide']
-    dag_info = trigger_predictions()
-    slide_to_promort = import_slide_to_promort(slide_info_)
+    with TaskGroup(group_id='add_slide_to_backend'):
+        slide_info_ = add_slide_to_omero()
+        slide = slide_info_['slide']
+        slide_to_promort = add_slide_to_promort(slide_info_)
+
+    dag_info = predictions()
     slide_to_promort >> dag_info
 
     for prediction in Prediction:
-        prediction_info = task(
-            register_prediction_to_omero,
-            task_id=f'register_{prediction.value}_to_omero')(prediction.value,
-                                                             dag_info)
-        label = prediction_info['label']
-        omero_id = str(prediction_info['omero_id'])
-        task(import_prediction_to_promort,
-             task_id=f'import_{prediction.value}_to_promort')(prediction.value,
-                                                              slide, label,
-                                                              omero_id)
+        with TaskGroup(group_id=f'add_{prediction.value}_to_backend'):
+            prediction_info = task(add_prediction_to_omero,
+                                   task_id=f'add_{prediction.value}_to_omero')(
+                                       prediction.value, dag_info)
+            label = prediction_info['label']
+            omero_id = str(prediction_info['omero_id'])
+            task(add_prediction_to_promort,
+                 task_id=f'add_{prediction.value}_to_promort')(
+                     prediction.value, slide, label, omero_id)
