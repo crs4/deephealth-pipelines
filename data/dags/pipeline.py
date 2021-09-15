@@ -19,6 +19,7 @@ from airflow.models import DagRun, Variable
 from airflow.operators.python import get_current_context
 from airflow.utils import timezone
 from airflow.utils.state import State
+from airflow.utils.task_group import TaskGroup
 from airflow.utils.types import DagRunType
 
 from airflow import DAG
@@ -63,6 +64,34 @@ def get_output_dir(dag_id, dag_run_id):
                         dag_run_id).replace(':', '_').replace('+', '_')
 
 
+def _register_prediction_to_omero(location):
+    predictions_dir = Variable.get('PREDICTIONS_DIR')
+    ome_seadragon_register_predictions = Variable.get(
+        'OME_SEADRAGON_REGISTER_PREDICTIONS')
+
+    basename = os.path.basename(location)
+    shutil.copy(location, os.path.join(predictions_dir, basename))
+
+    response = requests.get(ome_seadragon_register_predictions,
+                            params={
+                                'dataset_label': basename,
+                                'keep_archive': True
+                            })
+    response.raise_for_status()
+    res_json = response.json()
+
+    logger.info(res_json)
+    return res_json
+
+
+def _get_prediction_location(prediction, output_dir):
+    with open(os.path.join(output_dir, 'workflow_report.json'),
+              'r') as report_file:
+        report = json.load(report_file)
+
+    return report[prediction]['location'].replace('file://', '')
+
+
 with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
 
     @task(multiple_outputs=True)
@@ -79,7 +108,7 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
         return {'slide': slide, 'omero_id': omero_id}
 
     @task
-    def trigger_predictions() -> Tuple[str, str]:
+    def trigger_predictions() -> Dict[str, str]:
         slide = get_current_context()['params']['slide']
         allowed_states = [State.SUCCESS]
         failed_states = [State.FAILED]
@@ -115,7 +144,7 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
                 raise AirflowException(
                     f"{dag_id} failed with failed states {state}")
             if state in allowed_states:
-                return dag_id, triggered_run_id
+                return {'dag_id': dag_id, 'dag_run_id': triggered_run_id}
 
     @task
     def import_slide_to_promort(slide_info: Dict[str, str]):
@@ -135,60 +164,47 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
         ]
         subprocess.check_output(command, stderr=subprocess.PIPE)
 
-    @task
-    def register_predictions_to_omero(dag_info):
-        dag_id, dag_run_id = dag_info
+    def register_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
+        dag_id, dag_run_id = dag_info['dag_id'], dag_info['dag_run_id']
+        logger.info(
+            'register prediction %s to omero with dag_id %s, dag_run_id %s',
+            prediction, dag_id, dag_run_id)
         output_dir = get_output_dir(dag_id, dag_run_id)
-        predictions_dir = Variable.get('PREDICTIONS_DIR')
-        ome_seadragon_register_predictions = Variable.get(
-            'OME_SEADRAGON_REGISTER_PREDICTIONS')
+        location = _get_prediction_location(prediction, output_dir)
+        return _register_prediction_to_omero(location)
 
-        with open(os.path.join(output_dir, 'workflow_report.json'),
-                  'r') as report_file:
-            report = json.load(report_file)
+    def import_prediction_to_promort(prediction, slide: str, label: str,
+                                     omero_id: str):
 
-        res = {}
-        for prediction in ['tissue', 'tumor']:
-            location = report[prediction]['location'].replace('file://', '')
-            basename = os.path.basename(location)
-            shutil.copy(location, os.path.join(predictions_dir, basename))
-
-            response = requests.get(ome_seadragon_register_predictions,
-                                    params={
-                                        'dataset_label': basename,
-                                        'keep_archive': True
-                                    })
-            response.raise_for_status()
-            res[prediction] = response.json()
-
-        logger.info(res)
-        return res
-
-    @task
-    def import_predictions_to_promort(slide_info: Dict[str, str],
-                                      predictions_info: Dict[str, str]):
-
-        slide = slide_info['slide']
         connection = BaseHook.get_connection('promort')
-        for prediction_name, data in predictions_info.items():
-            command = [
-                'docker', 'run', '--rm', PROMORT_TOOLS_IMG, 'importer.py',
-                '--host',
-                f'{connection.conn_type}://{connection.host}:{connection.port}',
-                '--user', connection.login, '--passwd', connection.password,
-                '--session-id', '***REMOVED***',
-                'predictions_importer', '--prediction-label', data['label'],
-                '--slide-label', slide, '--prediction-type',
-                prediction_name.upper(), '--omero-id',
-                str(data['omero_id'])
-            ]
+        command = [
+            'docker', 'run', '--rm', PROMORT_TOOLS_IMG, 'importer.py',
+            '--host',
+            f'{connection.conn_type}://{connection.host}:{connection.port}',
+            '--user', connection.login, '--passwd', connection.password,
+            '--session-id', '***REMOVED***', 'predictions_importer',
+            '--prediction-label', label, '--slide-label', slide,
+            '--prediction-type',
+            prediction.upper(), '--omero-id', omero_id
+        ]
 
-            logger.info('command %s', command)
-            subprocess.check_output(command, stderr=subprocess.PIPE)
+        logger.info('command %s', command)
+        subprocess.check_output(command, stderr=subprocess.PIPE)
 
     slide_info_ = register_slide_to_omeseadragon()
+    slide = slide_info_['slide']
     dag_info = trigger_predictions()
     slide_to_promort = import_slide_to_promort(slide_info_)
     slide_to_promort >> dag_info
-    predictions_info = register_predictions_to_omero(dag_info)
-    import_predictions_to_promort(slide_info_, predictions_info)
+
+    for prediction in Prediction:
+        prediction_info = task(
+            register_prediction_to_omero,
+            task_id=f'register_{prediction.value}_to_omero')(prediction.value,
+                                                             dag_info)
+        label = prediction_info['label']
+        omero_id = str(prediction_info['omero_id'])
+        task(import_prediction_to_promort,
+             task_id=f'import_{prediction.value}_to_promort')(prediction.value,
+                                                              slide, label,
+                                                              omero_id)
