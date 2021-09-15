@@ -64,17 +64,19 @@ def get_output_dir(dag_id, dag_run_id):
                         dag_run_id).replace(':', '_').replace('+', '_')
 
 
-def _register_prediction_to_omero(location):
+def _move_prediction_to_omero_dir(location):
     predictions_dir = Variable.get('PREDICTIONS_DIR')
-    ome_seadragon_register_predictions = Variable.get(
-        'OME_SEADRAGON_REGISTER_PREDICTIONS')
-
     basename = os.path.basename(location)
     shutil.copy(location, os.path.join(predictions_dir, basename))
 
+
+def _register_prediction_to_omero(label):
+    ome_seadragon_register_predictions = Variable.get(
+        'OME_SEADRAGON_REGISTER_PREDICTIONS')
+
     response = requests.get(ome_seadragon_register_predictions,
                             params={
-                                'dataset_label': basename,
+                                'dataset_label': label,
                                 'keep_archive': True
                             })
     response.raise_for_status()
@@ -177,7 +179,8 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
             prediction, dag_id, dag_run_id)
         output_dir = get_output_dir(dag_id, dag_run_id)
         location = _get_prediction_location(prediction, output_dir)
-        return _register_prediction_to_omero(location)
+        _move_prediction_to_omero_dir(location)
+        return _register_prediction_to_omero(os.path.basename(location))
 
     def add_prediction_to_promort(prediction, slide: str, label: str,
                                   omero_id: str):
@@ -227,4 +230,11 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
                  task_id=f'add_{prediction.value}_to_promort')(
                      prediction.value, slide, label, omero_id)
             if prediction == Prediction.TUMOR:
-                convert_to_tiledb(label)
+                convert_to_tiledb(label) >> [
+                    task(_register_prediction_to_omero,
+                         task_id=f'add_{prediction.value}.tiledb_to_omero')
+                    (f'{label}.tiledb'),
+                    task(add_prediction_to_promort,
+                         task_id=f'add_{prediction.value}.tiledb_to_promort')
+                    (prediction.value, slide, f'{label}.tiledb', omero_id)
+                ]
