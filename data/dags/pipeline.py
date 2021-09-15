@@ -84,6 +84,12 @@ def _register_prediction_to_omero(location):
     return res_json
 
 
+def run(command):
+    out = subprocess.check_output(command, stderr=subprocess.PIPE)
+    logger.info('out of command %s: %s', command, out)
+    return str(out)
+
+
 def _get_prediction_location(prediction, output_dir):
     with open(os.path.join(output_dir, 'workflow_report.json'),
               'r') as report_file:
@@ -191,6 +197,17 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
         logger.info('command %s', command)
         subprocess.check_output(command, stderr=subprocess.PIPE)
 
+    @task
+    def convert_to_tiledb(dataset_label):
+        predictions_dir = Variable.get('PREDICTIONS_DIR')
+
+        command = [
+            'docker', 'run', '--rm', '-v', f'{predictions_dir}:/data',
+            PROMORT_TOOLS_IMG, 'zarr_to_tiledb.py', '--zarr-dataset',
+            f'/data/{dataset_label}', '--out-folder', '/data'
+        ]
+        return run(command)
+
     with TaskGroup(group_id='add_slide_to_backend'):
         slide_info_ = add_slide_to_omero()
         slide = slide_info_['slide']
@@ -209,3 +226,5 @@ with DAG('pipeline', default_args=default_args, schedule_interval=None) as dag:
             task(add_prediction_to_promort,
                  task_id=f'add_{prediction.value}_to_promort')(
                      prediction.value, slide, label, omero_id)
+            if prediction == Prediction.TUMOR:
+                convert_to_tiledb(label)
