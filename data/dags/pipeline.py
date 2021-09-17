@@ -69,6 +69,8 @@ def create_dag():
                          prediction.value, slide, label, omero_id)
                 if prediction == Prediction.TUMOR:
                     tumor_branch(label, prediction, slide, omero_id)
+                elif prediction == Prediction.TISSUE:
+                    tissue_branch(label)
         return dag
 
 
@@ -196,8 +198,22 @@ def tumor_branch(label, prediction, slide, omero_id):
     ]
 
 
-def tissue_branch():
-    ...
+def tissue_branch(dataset_label):
+    #  TODO add variable for threshold
+    generate_roi(dataset_label, 80)
+
+
+@task
+def generate_roi(dataset_label, threshold):
+    predictions_dir = Variable.get('PREDICTIONS_DIR')
+
+    command = [
+        'docker', 'run', '--rm', '-v', f'{predictions_dir}:/data',
+        PROMORT_TOOLS_IMG, 'mask_to_shapes.py', f'/data/{dataset_label}', '-o',
+        f'/data/{dataset_label}.json', '-t',
+        str(threshold)
+    ]
+    return run(command)
 
 
 class Prediction(Enum):
