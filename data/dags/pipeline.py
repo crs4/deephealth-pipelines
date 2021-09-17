@@ -40,6 +40,8 @@ default_args = {
 OME_SEADRAGON_REGISTER_SLIDE = Variable.get('OME_SEADRAGON_REGISTER_SLIDE')
 OME_SEADRAGON_URL = Variable.get('OME_SEADRAGON_URL')
 
+PREDICTIONS_DIR = Variable.get('PREDICTIONS_DIR')
+
 #  PROMORT_TOOLS_IMG = 'lucalianas/promort_tools:dev'
 PROMORT_TOOLS_IMG = 'promort_tools:roi'
 
@@ -177,10 +179,9 @@ def add_prediction_to_promort(prediction, slide: str, label: str,
 
 @task
 def convert_to_tiledb(dataset_label):
-    predictions_dir = Variable.get('PREDICTIONS_DIR')
 
     command = [
-        'docker', 'run', '--rm', '-v', f'{predictions_dir}:/data',
+        'docker', 'run', '--rm', '-v', f'{PREDICTIONS_DIR}:/data',
         PROMORT_TOOLS_IMG, 'zarr_to_tiledb.py', '--zarr-dataset',
         f'/data/{dataset_label}', '--out-folder', '/data'
     ]
@@ -205,10 +206,8 @@ def tissue_branch(dataset_label):
 
 @task
 def generate_roi(dataset_label, threshold):
-    predictions_dir = Variable.get('PREDICTIONS_DIR')
-
     command = [
-        'docker', 'run', '--rm', '-v', f'{predictions_dir}:/data',
+        'docker', 'run', '--rm', '-v', f'{PREDICTIONS_DIR}:/data',
         PROMORT_TOOLS_IMG, 'mask_to_shapes.py', f'/data/{dataset_label}', '-o',
         f'/data/{dataset_label}.json', '-t',
         str(threshold)
@@ -238,9 +237,8 @@ def get_output_dir(dag_id, dag_run_id):
 
 
 def _move_prediction_to_omero_dir(location):
-    predictions_dir = Variable.get('PREDICTIONS_DIR')
     basename = os.path.basename(location)
-    shutil.copy(location, os.path.join(predictions_dir, basename))
+    shutil.copy(location, os.path.join(PREDICTIONS_DIR, basename))
 
 
 def _register_prediction_to_omero(label):
