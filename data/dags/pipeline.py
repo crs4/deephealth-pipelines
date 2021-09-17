@@ -201,11 +201,13 @@ def tumor_branch(label, prediction, slide, omero_id):
 
 def tissue_branch(dataset_label):
     #  TODO add variable for threshold
-    generate_roi(dataset_label, 80)
+    generate_roi(dataset_label)
 
 
 @task
-def generate_roi(dataset_label, threshold):
+def generate_roi(dataset_label):
+    threshold = Variable.get('ROI_THRESHOLD')
+
     command = [
         'docker', 'run', '--rm', '-v', f'{PREDICTIONS_DIR}:/data',
         PROMORT_TOOLS_IMG, 'mask_to_shapes.py', f'/data/{dataset_label}', '-o',
