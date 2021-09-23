@@ -212,7 +212,7 @@ def generate_roi(dataset_label):
         'docker', 'run', '--rm', '-v', f'{PREDICTIONS_DIR}:/data',
         PROMORT_TOOLS_IMG, 'mask_to_shapes.py', f'/data/{dataset_label}', '-o',
         f'/data/{dataset_label}.json', '-t',
-        str(threshold)
+        str(threshold), '--scale-func', 'fit'
     ]
     return run(command)
 
