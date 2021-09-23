@@ -43,7 +43,7 @@ OME_SEADRAGON_URL = Variable.get('OME_SEADRAGON_URL')
 PREDICTIONS_DIR = Variable.get('PREDICTIONS_DIR')
 
 #  PROMORT_TOOLS_IMG = 'lucalianas/promort_tools:dev'
-PROMORT_TOOLS_IMG = 'promort_tools:roi'
+PROMORT_TOOLS_IMG = 'promort_tools:roi_3'
 
 
 def create_dag():
