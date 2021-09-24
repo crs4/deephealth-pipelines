@@ -51,22 +51,22 @@ def create_dag():
              schedule_interval=None) as dag:
 
         with TaskGroup(group_id='add_slide_to_backend'):
-            slide_info_ = add_slide_to_omero()
+            slide_info_ = task_add_slide_to_omero()
             slide = slide_info_['slide']
-            slide_to_promort = add_slide_to_promort(slide_info_)
+            slide_to_promort = task_add_slide_to_promort(slide_info_)
 
-        dag_info = predictions()
+        dag_info = task_predictions()
         slide_to_promort >> dag_info
 
         for prediction in Prediction:
             with TaskGroup(group_id=f'add_{prediction.value}_to_backend'):
                 prediction_info = task(
-                    add_prediction_to_omero,
+                    task_add_prediction_to_omero,
                     task_id=f'add_{prediction.value}_to_omero')(
                         prediction.value, dag_info)
                 label = prediction_info['label']
                 omero_id = str(prediction_info['omero_id'])
-                task(add_prediction_to_promort,
+                task(task_add_prediction_to_promort,
                      task_id=f'add_{prediction.value}_to_promort')(
                          prediction.value, slide, label, omero_id)
                 if prediction == Prediction.TUMOR:
@@ -77,7 +77,7 @@ def create_dag():
 
 
 @task(multiple_outputs=True)
-def add_slide_to_omero() -> Dict[str, str]:
+def task_add_slide_to_omero() -> Dict[str, str]:
     slide = get_current_context()['params']['slide']
     slide_name = os.path.splitext(slide)[0]
     response = requests.get(OME_SEADRAGON_REGISTER_SLIDE,
@@ -91,7 +91,7 @@ def add_slide_to_omero() -> Dict[str, str]:
 
 
 @task
-def predictions() -> Dict[str, str]:
+def task_predictions() -> Dict[str, str]:
     slide = get_current_context()['params']['slide']
     allowed_states = [State.SUCCESS]
     failed_states = [State.FAILED]
@@ -131,7 +131,7 @@ def predictions() -> Dict[str, str]:
 
 
 @task
-def add_slide_to_promort(slide_info: Dict[str, str]):
+def task_add_slide_to_promort(slide_info: Dict[str, str]):
     connection = BaseHook.get_connection('promort')
 
     slide = slide_info['slide']
@@ -148,7 +148,7 @@ def add_slide_to_promort(slide_info: Dict[str, str]):
     subprocess.check_output(command, stderr=subprocess.PIPE)
 
 
-def add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
+def task_add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
     dag_id, dag_run_id = dag_info['dag_id'], dag_info['dag_run_id']
     logger.info(
         'register prediction %s to omero with dag_id %s, dag_run_id %s',
@@ -159,8 +159,8 @@ def add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
     return _register_prediction_to_omero(os.path.basename(location))
 
 
-def add_prediction_to_promort(prediction, slide: str, label: str,
-                              omero_id: str):
+def task_add_prediction_to_promort(prediction, slide: str, label: str,
+                                   omero_id: str):
 
     connection = BaseHook.get_connection('promort')
     command = [
@@ -178,7 +178,7 @@ def add_prediction_to_promort(prediction, slide: str, label: str,
 
 
 @task
-def convert_to_tiledb(dataset_label):
+def task_convert_to_tiledb(dataset_label):
 
     command = [
         'docker', 'run', '--rm', '-v', f'{PREDICTIONS_DIR}:/data',
@@ -189,11 +189,11 @@ def convert_to_tiledb(dataset_label):
 
 
 def tumor_branch(label, prediction, slide, omero_id):
-    convert_to_tiledb(label) >> [
+    task_convert_to_tiledb(label) >> [
         task(_register_prediction_to_omero,
              task_id=f'add_{prediction.value}.tiledb_to_omero')
         (f'{label}.tiledb'),
-        task(add_prediction_to_promort,
+        task(task_add_prediction_to_promort,
              task_id=f'add_{prediction.value}.tiledb_to_promort')(
                  prediction.value, slide, f'{label}.tiledb', omero_id)
     ]
@@ -201,11 +201,11 @@ def tumor_branch(label, prediction, slide, omero_id):
 
 def tissue_branch(dataset_label):
     #  TODO add variable for threshold
-    generate_roi(dataset_label)
+    task_generate_roi(dataset_label)
 
 
 @task
-def generate_roi(dataset_label):
+def task_generate_roi(dataset_label):
     threshold = Variable.get('ROI_THRESHOLD')
 
     command = [
