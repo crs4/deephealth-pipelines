@@ -64,15 +64,17 @@ def create_dag():
                     task_add_prediction_to_omero,
                     task_id=f'add_{prediction.value}_to_omero')(
                         prediction.value, dag_info)
-                label = prediction_info['label']
+                prediction_label = prediction_info['label']
                 omero_id = str(prediction_info['omero_id'])
+
                 task(task_add_prediction_to_promort,
                      task_id=f'add_{prediction.value}_to_promort')(
-                         prediction.value, slide, label, omero_id)
+                         prediction.value, slide, prediction_label, omero_id)
+
                 if prediction == Prediction.TUMOR:
-                    tumor_branch(label, prediction, slide, omero_id)
+                    tumor_branch(prediction_label, prediction, slide, omero_id)
                 elif prediction == Prediction.TISSUE:
-                    tissue_branch(label)
+                    tissue_branch(prediction_label)
         return dag
 
 
@@ -159,8 +161,8 @@ def task_add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
     return _register_prediction_to_omero(os.path.basename(location))
 
 
-def task_add_prediction_to_promort(prediction, slide: str, label: str,
-                                   omero_id: str):
+def task_add_prediction_to_promort(prediction, slide_label: str,
+                                   prediction_label: str, omero_id: str):
 
     connection = BaseHook.get_connection('promort')
     command = [
@@ -168,7 +170,7 @@ def task_add_prediction_to_promort(prediction, slide: str, label: str,
         f'{connection.conn_type}://{connection.host}:{connection.port}',
         '--user', connection.login, '--passwd', connection.password,
         '--session-id', '***REMOVED***', 'predictions_importer',
-        '--prediction-label', label, '--slide-label', slide,
+        '--prediction-label', prediction_label, '--slide-label', slide_label,
         '--prediction-type',
         prediction.upper(), '--omero-id', omero_id
     ]
@@ -188,14 +190,14 @@ def task_convert_to_tiledb(dataset_label):
     return run(command)
 
 
-def tumor_branch(label, prediction, slide, omero_id):
-    task_convert_to_tiledb(label) >> [
+def tumor_branch(prediction_label, prediction, slide_label, omero_id):
+    task_convert_to_tiledb(prediction_label) >> [
         task(_register_prediction_to_omero,
              task_id=f'add_{prediction.value}.tiledb_to_omero')
-        (f'{label}.tiledb'),
+        (f'{prediction_label}.tiledb'),
         task(task_add_prediction_to_promort,
-             task_id=f'add_{prediction.value}.tiledb_to_promort')(
-                 prediction.value, slide, f'{label}.tiledb', omero_id)
+             task_id=f'add_{prediction.value}.tiledb_to_promort')
+        (prediction.value, slide_label, f'{prediction_label}.tiledb', omero_id)
     ]
 
 
