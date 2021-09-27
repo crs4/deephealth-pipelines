@@ -150,7 +150,7 @@ def task_add_slide_to_promort(slide_info: Dict[str, str]):
         str(omero_id), '--mirax', '--omero-host', OME_SEADRAGON_URL,
         '--ignore-duplicated'
     ]
-    subprocess.check_output(command, stderr=subprocess.PIPE)
+    run(command)
 
 
 def task_add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
@@ -179,7 +179,7 @@ def task_add_prediction_to_promort(prediction, slide_label: str,
     ]
 
     logger.info('command %s', command)
-    res = subprocess.check_output(command, stderr=subprocess.PIPE)
+    res = run(command)
     return json.loads(res)['id']
 
 
@@ -281,7 +281,12 @@ def _register_prediction_to_omero(label):
 
 def run(command):
     logger.info('command %s', command)
-    out = subprocess.check_output(command, stderr=subprocess.PIPE).decode()
+    res = subprocess.run(command, capture_output=True)
+    if res.returncode:
+        logger.error(res.stderr)
+        res.check_returncode()
+
+    out = res.stdout.decode()
     logger.info('out %s', out)
     return out
 
