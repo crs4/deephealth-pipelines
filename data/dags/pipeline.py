@@ -231,8 +231,8 @@ def task_create_tissue_fragments(prediction_id, shapes):
         f'{PROMORT_CONNECTION.conn_type}://{PROMORT_CONNECTION.host}:{PROMORT_CONNECTION.port}',
         '--user', PROMORT_CONNECTION.login, '--passwd',
         PROMORT_CONNECTION.password, '--session-id', '***REMOVED***',
-        'tissue_fragments_importer.py', '--prediction-id',
-        str(prediction_id), '--shapes', f"'{json.dumps(shapes)}'"
+        'tissue_fragments_importer', '--prediction-id',
+        str(prediction_id), '--shapes', f"{json.dumps(shapes)}"
     ]
     run(command)
 
