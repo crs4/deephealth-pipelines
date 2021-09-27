@@ -37,14 +37,15 @@ default_args = {
     'retry_delay': timedelta(minutes=1),
 }
 
+
 OME_SEADRAGON_REGISTER_SLIDE = Variable.get('OME_SEADRAGON_REGISTER_SLIDE')
 OME_SEADRAGON_URL = Variable.get('OME_SEADRAGON_URL')
+
 
 PROMORT_CONNECTION = BaseHook.get_connection('promort')
 PREDICTIONS_DIR = Variable.get('PREDICTIONS_DIR')
 
-#  PROMORT_TOOLS_IMG = 'lucalianas/promort_tools:dev'
-PROMORT_TOOLS_IMG = 'promort_tools:roi_5'
+PROMORT_TOOLS_IMG = 'lucalianas/promort_tools:dev'
 
 
 def create_dag():
