@@ -37,10 +37,8 @@ default_args = {
     'retry_delay': timedelta(minutes=1),
 }
 
-
 OME_SEADRAGON_REGISTER_SLIDE = Variable.get('OME_SEADRAGON_REGISTER_SLIDE')
 OME_SEADRAGON_URL = Variable.get('OME_SEADRAGON_URL')
-
 
 PROMORT_CONNECTION = BaseHook.get_connection('promort')
 PREDICTIONS_DIR = Variable.get('PREDICTIONS_DIR')
@@ -53,24 +51,24 @@ def create_dag():
              schedule_interval=None) as dag:
 
         with TaskGroup(group_id='add_slide_to_backend'):
-            slide_info_ = task_add_slide_to_omero()
+            slide_info_ = add_slide_to_omero()
             slide = slide_info_['slide']
-            slide_to_promort = task_add_slide_to_promort(slide_info_)
+            slide_to_promort = add_slide_to_promort(slide_info_)
 
-        dag_info = task_predictions()
+        dag_info = predictions()
         slide_to_promort >> dag_info
 
         for prediction in Prediction:
             with TaskGroup(group_id=f'add_{prediction.value}_to_backend'):
                 prediction_info = task(
-                    task_add_prediction_to_omero,
+                    add_prediction_to_omero,
                     task_id=f'add_{prediction.value}_to_omero')(
                         prediction.value, dag_info)
                 prediction_label = prediction_info['label']
                 omero_id = str(prediction_info['omero_id'])
 
                 prediction_id = task(
-                    task_add_prediction_to_promort,
+                    add_prediction_to_promort,
                     task_id=f'add_{prediction.value}_to_promort')(
                         prediction.value, slide, prediction_label, omero_id)
 
@@ -82,7 +80,7 @@ def create_dag():
 
 
 @task(multiple_outputs=True)
-def task_add_slide_to_omero() -> Dict[str, str]:
+def add_slide_to_omero() -> Dict[str, str]:
     slide = get_current_context()['params']['slide']
     slide_name = os.path.splitext(slide)[0]
     response = requests.get(OME_SEADRAGON_REGISTER_SLIDE,
@@ -96,7 +94,7 @@ def task_add_slide_to_omero() -> Dict[str, str]:
 
 
 @task
-def task_predictions() -> Dict[str, str]:
+def predictions() -> Dict[str, str]:
     slide = get_current_context()['params']['slide']
     allowed_states = [State.SUCCESS]
     failed_states = [State.FAILED]
@@ -136,7 +134,7 @@ def task_predictions() -> Dict[str, str]:
 
 
 @task
-def task_add_slide_to_promort(slide_info: Dict[str, str]):
+def add_slide_to_promort(slide_info: Dict[str, str]):
 
     slide = slide_info['slide']
     omero_id = slide_info['omero_id']
@@ -150,23 +148,22 @@ def task_add_slide_to_promort(slide_info: Dict[str, str]):
         str(omero_id), '--mirax', '--omero-host', OME_SEADRAGON_URL,
         '--ignore-duplicated'
     ]
-    run(command)
+    _run(command)
 
 
-def task_add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
+def add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
     dag_id, dag_run_id = dag_info['dag_id'], dag_info['dag_run_id']
     logger.info(
         'register prediction %s to omero with dag_id %s, dag_run_id %s',
         prediction, dag_id, dag_run_id)
-    output_dir = get_output_dir(dag_id, dag_run_id)
+    output_dir = _get_output_dir(dag_id, dag_run_id)
     location = _get_prediction_location(prediction, output_dir)
     _move_prediction_to_omero_dir(location)
     return _register_prediction_to_omero(os.path.basename(location))
 
 
-def task_add_prediction_to_promort(prediction, slide_label: str,
-                                   prediction_label: str,
-                                   omero_id: str) -> str:
+def add_prediction_to_promort(prediction, slide_label: str,
+                              prediction_label: str, omero_id: str) -> str:
 
     command = [
         'docker', 'run', '--rm', PROMORT_TOOLS_IMG, 'importer.py', '--host',
@@ -179,27 +176,27 @@ def task_add_prediction_to_promort(prediction, slide_label: str,
     ]
 
     logger.info('command %s', command)
-    res = run(command)
+    res = _run(command)
     return json.loads(res)['id']
 
 
 @task
-def task_convert_to_tiledb(dataset_label):
+def convert_to_tiledb(dataset_label):
 
     command = [
         'docker', 'run', '--rm', '-v', f'{PREDICTIONS_DIR}:/data',
         PROMORT_TOOLS_IMG, 'zarr_to_tiledb.py', '--zarr-dataset',
         f'/data/{dataset_label}', '--out-folder', '/data'
     ]
-    return run(command)
+    return _run(command)
 
 
 def tumor_branch(prediction_label, prediction, slide_label, omero_id):
-    task_convert_to_tiledb(prediction_label) >> [
+    convert_to_tiledb(prediction_label) >> [
         task(_register_prediction_to_omero,
              task_id=f'add_{prediction.value}.tiledb_to_omero')
         (f'{prediction_label}.tiledb'),
-        task(task_add_prediction_to_promort,
+        task(add_prediction_to_promort,
              task_id=f'add_{prediction.value}.tiledb_to_promort')
         (prediction.value, slide_label, f'{prediction_label}.tiledb', omero_id)
     ]
@@ -207,12 +204,12 @@ def tumor_branch(prediction_label, prediction, slide_label, omero_id):
 
 def tissue_branch(dataset_label, prediction_id):
     #  TODO add variable for threshold
-    shapes = task_generate_roi(dataset_label)
-    task_create_tissue_fragments(prediction_id, shapes)
+    shapes = generate_roi(dataset_label)
+    create_tissue_fragments(prediction_id, shapes)
 
 
 @task(multiple_outputs=True)
-def task_generate_roi(dataset_label) -> Dict:
+def generate_roi(dataset_label) -> Dict:
     threshold = Variable.get('ROI_THRESHOLD')
 
     command = [
@@ -220,12 +217,12 @@ def task_generate_roi(dataset_label) -> Dict:
         PROMORT_TOOLS_IMG, 'mask_to_shapes.py', f'/data/{dataset_label}', '-t',
         str(threshold), '--scale-func', 'fit'
     ]
-    out = run(command)
+    out = _run(command)
     return json.loads(out)
 
 
 @task
-def task_create_tissue_fragments(prediction_id, shapes):
+def create_tissue_fragments(prediction_id, shapes):
     command = [
         'docker', 'run', '--rm', PROMORT_TOOLS_IMG, 'importer.py', '--host',
         f'{PROMORT_CONNECTION.conn_type}://{PROMORT_CONNECTION.host}:{PROMORT_CONNECTION.port}',
@@ -234,7 +231,7 @@ def task_create_tissue_fragments(prediction_id, shapes):
         'tissue_fragments_importer', '--prediction-id',
         str(prediction_id), '--shapes', f"{json.dumps(shapes)}"
     ]
-    run(command)
+    _run(command)
 
 
 class Prediction(Enum):
@@ -242,9 +239,9 @@ class Prediction(Enum):
     TUMOR = 'tumor'
 
 
-def get_prediction_path(prediction: Prediction, dag_id: str,
-                        dag_run_id: str) -> str:
-    output_dir = get_output_dir(dag_id, dag_run_id)
+def _get_prediction_path(prediction: Prediction, dag_id: str,
+                         dag_run_id: str) -> str:
+    output_dir = _get_output_dir(dag_id, dag_run_id)
 
     with open(os.path.join(output_dir, 'workflow_report.json'),
               'r') as report_file:
@@ -253,7 +250,7 @@ def get_prediction_path(prediction: Prediction, dag_id: str,
     return report[prediction.value]['location'].replace('file://', '')
 
 
-def get_output_dir(dag_id, dag_run_id):
+def _get_output_dir(dag_id, dag_run_id):
     return os.path.join(Variable.get('OUT_DIR'), dag_id,
                         dag_run_id).replace(':', '_').replace('+', '_')
 
@@ -279,7 +276,7 @@ def _register_prediction_to_omero(label):
     return res_json
 
 
-def run(command):
+def _run(command):
     logger.info('command %s', command)
     res = subprocess.run(command, capture_output=True)
     if res.returncode:
