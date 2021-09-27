@@ -8,7 +8,7 @@ import subprocess
 import time
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 import requests
 from airflow.api.common.experimental.trigger_dag import trigger_dag
@@ -37,13 +37,15 @@ default_args = {
     'retry_delay': timedelta(minutes=1),
 }
 
+
 OME_SEADRAGON_REGISTER_SLIDE = Variable.get('OME_SEADRAGON_REGISTER_SLIDE')
 OME_SEADRAGON_URL = Variable.get('OME_SEADRAGON_URL')
 
+
+PROMORT_CONNECTION = BaseHook.get_connection('promort')
 PREDICTIONS_DIR = Variable.get('PREDICTIONS_DIR')
 
-#  PROMORT_TOOLS_IMG = 'lucalianas/promort_tools:dev'
-PROMORT_TOOLS_IMG = 'promort_tools:roi_5'
+PROMORT_TOOLS_IMG = 'lucalianas/promort_tools:dev'
 
 
 def create_dag():
@@ -67,14 +69,15 @@ def create_dag():
                 prediction_label = prediction_info['label']
                 omero_id = str(prediction_info['omero_id'])
 
-                task(task_add_prediction_to_promort,
-                     task_id=f'add_{prediction.value}_to_promort')(
-                         prediction.value, slide, prediction_label, omero_id)
+                prediction_id = task(
+                    task_add_prediction_to_promort,
+                    task_id=f'add_{prediction.value}_to_promort')(
+                        prediction.value, slide, prediction_label, omero_id)
 
                 if prediction == Prediction.TUMOR:
                     tumor_branch(prediction_label, prediction, slide, omero_id)
                 elif prediction == Prediction.TISSUE:
-                    tissue_branch(prediction_label)
+                    tissue_branch(prediction_label, prediction_id)
         return dag
 
 
@@ -134,16 +137,16 @@ def task_predictions() -> Dict[str, str]:
 
 @task
 def task_add_slide_to_promort(slide_info: Dict[str, str]):
-    connection = BaseHook.get_connection('promort')
 
     slide = slide_info['slide']
     omero_id = slide_info['omero_id']
     command = [
         'docker', 'run', '--rm', PROMORT_TOOLS_IMG, 'importer.py', '--host',
-        f'{connection.conn_type}://{connection.host}:{connection.port}',
-        '--user', connection.login, '--passwd', connection.password,
-        '--session-id', 'promort-dev_sessionid', 'slides_importer',
-        '--slide-label', slide, '--extract-case', '--omero-id',
+        f'{PROMORT_CONNECTION.conn_type}://{PROMORT_CONNECTION.host}:{PROMORT_CONNECTION.port}',
+        '--user', PROMORT_CONNECTION.login, '--passwd',
+        PROMORT_CONNECTION.password, '--session-id', 'promort-dev_sessionid',
+        'slides_importer', '--slide-label', slide, '--extract-case',
+        '--omero-id',
         str(omero_id), '--mirax', '--omero-host', OME_SEADRAGON_URL,
         '--ignore-duplicated'
     ]
@@ -162,21 +165,22 @@ def task_add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
 
 
 def task_add_prediction_to_promort(prediction, slide_label: str,
-                                   prediction_label: str, omero_id: str):
+                                   prediction_label: str,
+                                   omero_id: str) -> str:
 
-    connection = BaseHook.get_connection('promort')
     command = [
         'docker', 'run', '--rm', PROMORT_TOOLS_IMG, 'importer.py', '--host',
-        f'{connection.conn_type}://{connection.host}:{connection.port}',
-        '--user', connection.login, '--passwd', connection.password,
-        '--session-id', 'promort-dev_sessionid', 'predictions_importer',
-        '--prediction-label', prediction_label, '--slide-label', slide_label,
-        '--prediction-type',
+        f'{PROMORT_CONNECTION.conn_type}://{PROMORT_CONNECTION.host}:{PROMORT_CONNECTION.port}',
+        '--user', PROMORT_CONNECTION.login, '--passwd',
+        PROMORT_CONNECTION.password, '--session-id', 'promort-dev_sessionid',
+        'predictions_importer', '--prediction-label', prediction_label,
+        '--slide-label', slide_label, '--prediction-type',
         prediction.upper(), '--omero-id', omero_id
     ]
 
     logger.info('command %s', command)
-    subprocess.check_output(command, stderr=subprocess.PIPE)
+    res = subprocess.check_output(command, stderr=subprocess.PIPE)
+    return json.loads(res)['id']
 
 
 @task
@@ -201,22 +205,36 @@ def tumor_branch(prediction_label, prediction, slide_label, omero_id):
     ]
 
 
-def tissue_branch(dataset_label):
+def tissue_branch(dataset_label, prediction_id):
     #  TODO add variable for threshold
-    task_generate_roi(dataset_label)
+    shapes = task_generate_roi(dataset_label)
+    task_create_tissue_fragments(prediction_id, shapes)
 
 
-@task
-def task_generate_roi(dataset_label):
+@task(multiple_outputs=True)
+def task_generate_roi(dataset_label) -> Dict:
     threshold = Variable.get('ROI_THRESHOLD')
 
     command = [
         'docker', 'run', '--rm', '-v', f'{PREDICTIONS_DIR}:/data',
-        PROMORT_TOOLS_IMG, 'mask_to_shapes.py', f'/data/{dataset_label}', '-o',
-        f'/data/{dataset_label}.json', '-t',
+        PROMORT_TOOLS_IMG, 'mask_to_shapes.py', f'/data/{dataset_label}', '-t',
         str(threshold), '--scale-func', 'fit'
     ]
-    return run(command)
+    out = run(command)
+    return json.loads(out)
+
+
+@task
+def task_create_tissue_fragments(prediction_id, shapes):
+    command = [
+        'docker', 'run', '--rm', PROMORT_TOOLS_IMG, 'importer.py', '--host',
+        f'{PROMORT_CONNECTION.conn_type}://{PROMORT_CONNECTION.host}:{PROMORT_CONNECTION.port}',
+        '--user', PROMORT_CONNECTION.login, '--passwd',
+        PROMORT_CONNECTION.password, '--session-id', 'promort-dev_sessionid',
+        'tissue_fragments_importer', '--prediction-id',
+        str(prediction_id), '--shapes', f"{json.dumps(shapes)}"
+    ]
+    run(command)
 
 
 class Prediction(Enum):
@@ -262,9 +280,10 @@ def _register_prediction_to_omero(label):
 
 
 def run(command):
-    out = subprocess.check_output(command, stderr=subprocess.PIPE)
-    logger.info('out of command %s: %s', command, out)
-    return str(out)
+    logger.info('command %s', command)
+    out = subprocess.check_output(command, stderr=subprocess.PIPE).decode()
+    logger.info('out %s', out)
+    return out
 
 
 def _get_prediction_location(prediction, output_dir):
