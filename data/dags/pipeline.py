@@ -237,13 +237,14 @@ def tumor_branch(prediction_label, prediction, slide_label, omero_id):
 
 def tissue_branch(dataset_label, prediction_id):
     #  TODO add variable for threshold
-    shapes = tissue_segmentation(dataset_label)
-    create_tissue_fragments(prediction_id, shapes)
+    shapes_filename = tissue_segmentation(dataset_label)
+    create_tissue_fragments(prediction_id, shapes_filename)
 
 
-@task(multiple_outputs=True)
-def tissue_segmentation(dataset_label) -> Dict:
+@task
+def tissue_segmentation(dataset_label) -> str:
     threshold = Variable.get("ROI_THRESHOLD")
+    out = f"/data/{dataset_label}_shapes.json"
 
     command = [
         "-v",
@@ -253,15 +254,20 @@ def tissue_segmentation(dataset_label) -> Dict:
         f"/data/{dataset_label}",
         "-t",
         str(threshold),
+        "-o",
+        out,
         "--scale-func",
         "shapely",
     ]
-    out = _docker_run(command)
-    return json.loads(out)
+    _docker_run(command)
+    return os.path.basename(out)
 
 
 @task
-def create_tissue_fragments(prediction_id, shapes):
+def create_tissue_fragments(prediction_id, shapes_filename):
+    with open(os.path.join(PREDICTIONS_DIR, shapes_filename)) as f:
+        shapes = f.read()
+
     command = [
         PROMORT_TOOLS_IMG,
         "importer.py",
@@ -277,7 +283,7 @@ def create_tissue_fragments(prediction_id, shapes):
         "--prediction-id",
         str(prediction_id),
         "--shapes",
-        f"{json.dumps(shapes)}",
+        f"{shapes}",
     ]
     _docker_run(command)
 
