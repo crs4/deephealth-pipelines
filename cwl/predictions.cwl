@@ -41,7 +41,7 @@ steps:
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: slaid:0.64.0-beta.6-tissue_model-extract_tissue_eddl_1.1
+          dockerPull: mdrio/slaid:0.64.0-beta.6-tissue_model-extract_tissue_eddl_1.1
 
         InitialWorkDirRequirement:
           listing:
