@@ -237,12 +237,12 @@ def tumor_branch(prediction_label, prediction, slide_label, omero_id):
 
 def tissue_branch(dataset_label, prediction_id):
     #  TODO add variable for threshold
-    shapes = generate_roi(dataset_label)
+    shapes = tissue_segmentation(dataset_label)
     create_tissue_fragments(prediction_id, shapes)
 
 
 @task(multiple_outputs=True)
-def generate_roi(dataset_label) -> Dict:
+def tissue_segmentation(dataset_label) -> Dict:
     threshold = Variable.get("ROI_THRESHOLD")
 
     command = [
