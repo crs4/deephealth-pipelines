@@ -254,7 +254,7 @@ def tissue_segmentation(dataset_label) -> Dict:
         "-t",
         str(threshold),
         "--scale-func",
-        "fit",
+        "shapely",
     ]
     out = _docker_run(command)
     return json.loads(out)
