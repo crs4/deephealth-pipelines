@@ -42,6 +42,7 @@ OME_SEADRAGON_URL = Variable.get("OME_SEADRAGON_URL")
 
 PROMORT_CONNECTION = BaseHook.get_connection("promort")
 PREDICTIONS_DIR = Variable.get("PREDICTIONS_DIR")
+DOCKER_NETWORK = Variable.get("DOCKER_NETWORK", default_var="")
 
 PROMORT_TOOLS_IMG = "lucalianas/promort_tools:dev"
 
@@ -136,9 +137,6 @@ def add_slide_to_promort(slide_info: Dict[str, str]):
     slide = slide_info["slide"]
     omero_id = slide_info["omero_id"]
     command = [
-        "docker",
-        "run",
-        "--rm",
         PROMORT_TOOLS_IMG,
         "importer.py",
         "--host",
@@ -160,7 +158,7 @@ def add_slide_to_promort(slide_info: Dict[str, str]):
         OME_SEADRAGON_URL,
         "--ignore-duplicated",
     ]
-    _run(command)
+    _docker_run(command)
 
 
 def add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
@@ -182,9 +180,6 @@ def add_prediction_to_promort(
 ) -> str:
 
     command = [
-        "docker",
-        "run",
-        "--rm",
         PROMORT_TOOLS_IMG,
         "importer.py",
         "--host",
@@ -207,7 +202,7 @@ def add_prediction_to_promort(
     ]
 
     logger.info("command %s", command)
-    res = _run(command)
+    res = _docker_run(command)
     return json.loads(res)["id"]
 
 
@@ -215,9 +210,6 @@ def add_prediction_to_promort(
 def convert_to_tiledb(dataset_label):
 
     command = [
-        "docker",
-        "run",
-        "--rm",
         "-v",
         f"{PREDICTIONS_DIR}:/data",
         PROMORT_TOOLS_IMG,
@@ -227,7 +219,7 @@ def convert_to_tiledb(dataset_label):
         "--out-folder",
         "/data",
     ]
-    return _run(command)
+    return _docker_run(command)
 
 
 def tumor_branch(prediction_label, prediction, slide_label, omero_id):
@@ -254,9 +246,6 @@ def generate_roi(dataset_label) -> Dict:
     threshold = Variable.get("ROI_THRESHOLD")
 
     command = [
-        "docker",
-        "run",
-        "--rm",
         "-v",
         f"{PREDICTIONS_DIR}:/data",
         PROMORT_TOOLS_IMG,
@@ -267,16 +256,13 @@ def generate_roi(dataset_label) -> Dict:
         "--scale-func",
         "fit",
     ]
-    out = _run(command)
+    out = _docker_run(command)
     return json.loads(out)
 
 
 @task
 def create_tissue_fragments(prediction_id, shapes):
     command = [
-        "docker",
-        "run",
-        "--rm",
         PROMORT_TOOLS_IMG,
         "importer.py",
         "--host",
@@ -293,7 +279,7 @@ def create_tissue_fragments(prediction_id, shapes):
         "--shapes",
         f"{json.dumps(shapes)}",
     ]
-    _run(command)
+    _docker_run(command)
 
 
 class Prediction(Enum):
@@ -349,6 +335,14 @@ def _run(command):
     out = res.stdout.decode()
     logger.info("out %s", out)
     return out
+
+
+def _docker_run(command):
+    docker_cmd = ["docker", "run", "--rm"]
+    if DOCKER_NETWORK:
+        docker_cmd.append("--network")
+        docker_cmd.append(DOCKER_NETWORK)
+    return _run(docker_cmd + command)
 
 
 def _get_prediction_location(prediction, output_dir):
