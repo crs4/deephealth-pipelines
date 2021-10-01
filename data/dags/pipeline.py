@@ -44,7 +44,7 @@ PROMORT_CONNECTION = BaseHook.get_connection("promort")
 PREDICTIONS_DIR = Variable.get("PREDICTIONS_DIR")
 DOCKER_NETWORK = Variable.get("DOCKER_NETWORK", default_var="")
 
-PROMORT_TOOLS_IMG = "lucalianas/promort_tools:dev"
+PROMORT_TOOLS_IMG = "promort_tools:roi_7"
 
 
 def create_dag():
@@ -237,32 +237,38 @@ def tumor_branch(prediction_label, prediction, slide_label, omero_id):
 
 def tissue_branch(dataset_label, prediction_id):
     #  TODO add variable for threshold
-    shapes = generate_roi(dataset_label)
-    create_tissue_fragments(prediction_id, shapes)
-
-
-@task(multiple_outputs=True)
-def generate_roi(dataset_label) -> Dict:
-    threshold = Variable.get("ROI_THRESHOLD")
-
-    command = [
-        "-v",
-        f"{PREDICTIONS_DIR}:/data",
-        PROMORT_TOOLS_IMG,
-        "mask_to_shapes.py",
-        f"/data/{dataset_label}",
-        "-t",
-        str(threshold),
-        "--scale-func",
-        "fit",
-    ]
-    out = _docker_run(command)
-    return json.loads(out)
+    shapes_filename = tissue_segmentation(dataset_label)
+    create_tissue_fragments(prediction_id, shapes_filename)
 
 
 @task
-def create_tissue_fragments(prediction_id, shapes):
+def tissue_segmentation(dataset_label) -> str:
+    threshold = Variable.get("ROI_THRESHOLD")
+    out = os.path.join(PREDICTIONS_DIR, f"{dataset_label}_shapes.json")
+
     command = [
+        "-v",
+        f"{PREDICTIONS_DIR}:{PREDICTIONS_DIR}",
+        PROMORT_TOOLS_IMG,
+        "mask_to_shapes.py",
+        f"{PREDICTIONS_DIR}/{dataset_label}",
+        "-t",
+        str(threshold),
+        "-o",
+        out,
+        "--scale-func",
+        "shapely",
+    ]
+    _docker_run(command)
+    return out
+
+
+@task
+def create_tissue_fragments(prediction_id, shapes_filename):
+
+    command = [
+        "-v",
+        f"{PREDICTIONS_DIR}:{PREDICTIONS_DIR}",
         PROMORT_TOOLS_IMG,
         "importer.py",
         "--host",
@@ -276,8 +282,7 @@ def create_tissue_fragments(prediction_id, shapes):
         "tissue_fragments_importer",
         "--prediction-id",
         str(prediction_id),
-        "--shapes",
-        f"{json.dumps(shapes)}",
+        shapes_filename,
     ]
     _docker_run(command)
 
