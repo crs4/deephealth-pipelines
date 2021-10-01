@@ -44,7 +44,7 @@ PROMORT_CONNECTION = BaseHook.get_connection("promort")
 PREDICTIONS_DIR = Variable.get("PREDICTIONS_DIR")
 DOCKER_NETWORK = Variable.get("DOCKER_NETWORK", default_var="")
 
-PROMORT_TOOLS_IMG = "promort_tools:roi_7"
+PROMORT_TOOLS_IMG = Variable.get("PROMORT_TOOLS_IMG")
 
 
 def create_dag():
