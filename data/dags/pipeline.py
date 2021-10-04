@@ -135,7 +135,7 @@ def predictions() -> Dict[str, str]:
 @task
 def add_slide_to_promort(slide_info: Dict[str, str]):
 
-    slide = slide_info["slide"]
+    slide = os.path.splitext(slide_info["slide"])[0]
     omero_id = slide_info["omero_id"]
     command = [
         PROMORT_TOOLS_IMG,
