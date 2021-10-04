@@ -62,8 +62,9 @@ def create_dag():
             with TaskGroup(group_id=f"add_{prediction.value}_to_backend"):
                 prediction_info = task(
                     add_prediction_to_omero, task_id=f"add_{prediction.value}_to_omero"
-                )(prediction.value, dag_info)
+                )(prediction, dag_info)
                 prediction_label = prediction_info["label"]
+                prediction_path = prediction_info["path"]
                 omero_id = str(prediction_info["omero_id"])
 
                 prediction_id = task(
@@ -74,7 +75,7 @@ def create_dag():
                 if prediction == Prediction.TUMOR:
                     tumor_branch(prediction_label, prediction, slide, omero_id)
                 elif prediction == Prediction.TISSUE:
-                    tissue_branch(prediction_label, prediction_id)
+                    tissue_branch(prediction_label, prediction_path, prediction_id)
         return dag
 
 
@@ -165,14 +166,16 @@ def add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
     dag_id, dag_run_id = dag_info["dag_id"], dag_info["dag_run_id"]
     logger.info(
         "register prediction %s to omero with dag_id %s, dag_run_id %s",
-        prediction,
+        prediction.value,
         dag_id,
         dag_run_id,
     )
     output_dir = _get_output_dir(dag_id, dag_run_id)
     location = _get_prediction_location(prediction, output_dir)
     _move_prediction_to_omero_dir(location)
-    return _register_prediction_to_omero(os.path.basename(location))
+    return _register_prediction_to_omero(
+        os.path.basename(location), prediction == Prediction.TUMOR
+    )
 
 
 def add_prediction_to_promort(
@@ -227,7 +230,7 @@ def tumor_branch(prediction_label, prediction, slide_label, omero_id):
         task(
             _register_prediction_to_omero,
             task_id=f"add_{prediction.value}.tiledb_to_omero",
-        )(f"{prediction_label}.tiledb"),
+        )(f"{prediction_label}.tiledb", False),
         task(
             add_prediction_to_promort,
             task_id=f"add_{prediction.value}.tiledb_to_promort",
@@ -235,23 +238,23 @@ def tumor_branch(prediction_label, prediction, slide_label, omero_id):
     ]
 
 
-def tissue_branch(dataset_label, prediction_id):
+def tissue_branch(dataset_label, dataset_path, prediction_id):
     #  TODO add variable for threshold
-    shapes_filename = tissue_segmentation(dataset_label)
+    shapes_filename = tissue_segmentation(dataset_label, dataset_path)
     create_tissue_fragments(prediction_id, shapes_filename)
 
 
 @task
-def tissue_segmentation(dataset_label) -> str:
+def tissue_segmentation(label, path) -> str:
     threshold = Variable.get("ROI_THRESHOLD")
-    out = os.path.join(PREDICTIONS_DIR, f"{dataset_label}_shapes.json")
+    out = os.path.join(PREDICTIONS_DIR, f"{label}_shapes.json")
 
     command = [
         "-v",
         f"{PREDICTIONS_DIR}:{PREDICTIONS_DIR}",
         PROMORT_TOOLS_IMG,
         "mask_to_shapes.py",
-        f"{PREDICTIONS_DIR}/{dataset_label}",
+        f"{PREDICTIONS_DIR}/{os.path.basename(path)}",
         "-t",
         str(threshold),
         "-o",
@@ -311,17 +314,29 @@ def _get_output_dir(dag_id, dag_run_id):
 
 def _move_prediction_to_omero_dir(location):
     basename = os.path.basename(location)
-    shutil.copy(location, os.path.join(PREDICTIONS_DIR, basename))
+    dest = os.path.join(PREDICTIONS_DIR, basename)
+    logger.info("moving %s to %s", location, dest)
+    # @fixme change to move
+    shutil.copy(location, dest)
 
 
-def _register_prediction_to_omero(label):
+def _register_prediction_to_omero(label, extract_archive):
+    logger.info(
+        "register_prediction_to_omero: label %s, extract_archive %s",
+        label,
+        extract_archive,
+    )
     ome_seadragon_register_predictions = Variable.get(
         "OME_SEADRAGON_REGISTER_PREDICTIONS"
     )
 
     response = requests.get(
         ome_seadragon_register_predictions,
-        params={"dataset_label": label, "keep_archive": True},
+        params={
+            "dataset_label": label,
+            "keep_archive": True,
+            "extract_archive": extract_archive,
+        },
     )
     response.raise_for_status()
     res_json = response.json()
@@ -354,7 +369,7 @@ def _get_prediction_location(prediction, output_dir):
     with open(os.path.join(output_dir, "workflow_report.json"), "r") as report_file:
         report = json.load(report_file)
 
-    return report[prediction]["location"].replace("file://", "")
+    return report[prediction.value]["location"].replace("file://", "")
 
 
 dag = create_dag()
