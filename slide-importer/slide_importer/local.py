@@ -96,7 +96,7 @@ class SlideImporter:
         timezone = pytz.timezone("Europe/Rome")
         now = timezone.localize(now)
         payload = {
-            "dag_run_id": f"predictions-{now.isoformat()}",
+            "dag_run_id": f"{slide.name}-{now.isoformat()}",
             "execution_date": now.isoformat(),
             "conf": {"slide": slide.name, "params": params},
         }
