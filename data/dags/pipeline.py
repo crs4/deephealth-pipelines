@@ -91,7 +91,7 @@ def add_slide_to_omero() -> Dict[str, str]:
     response.raise_for_status()
     omero_id = response.json()["mirax_index_omero_id"]
 
-    return {"slide": slide, "omero_id": omero_id}
+    return {"slide": slide_name, "omero_id": omero_id}
 
 
 @task
@@ -346,7 +346,7 @@ def _register_prediction_to_omero(label, extract_archive):
 
 
 def _run(command):
-    logger.info("command %s", command)
+    logger.info("command %s", " ".join(command))
     res = subprocess.run(command, capture_output=True)
     if res.returncode:
         logger.error(res.stderr)
