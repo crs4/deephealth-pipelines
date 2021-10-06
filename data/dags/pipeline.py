@@ -8,8 +8,8 @@ import subprocess
 import time
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Tuple
-
+from typing import Dict
+from uuid import uuid4
 import requests
 from airflow.api.common.experimental.trigger_dag import trigger_dag
 from airflow.decorators import task
@@ -48,7 +48,11 @@ PROMORT_TOOLS_IMG = Variable.get("PROMORT_TOOLS_IMG")
 
 
 def create_dag():
-    with DAG("pipeline", default_args=default_args, schedule_interval=None) as dag:
+    with DAG(
+        "pipeline",
+        default_args=default_args,
+        schedule_interval=None,
+    ) as dag:
 
         with TaskGroup(group_id="add_slide_to_backend"):
             slide_info_ = add_slide_to_omero()
@@ -172,9 +176,9 @@ def add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
     )
     output_dir = _get_output_dir(dag_id, dag_run_id)
     location = _get_prediction_location(prediction, output_dir)
-    _move_prediction_to_omero_dir(location)
+    dest = _move_prediction_to_omero_dir(location)
     return _register_prediction_to_omero(
-        os.path.basename(location), prediction == Prediction.TUMOR
+        os.path.basename(dest), prediction == Prediction.TUMOR
     )
 
 
@@ -313,11 +317,11 @@ def _get_output_dir(dag_id, dag_run_id):
 
 
 def _move_prediction_to_omero_dir(location):
-    basename = os.path.basename(location)
-    dest = os.path.join(PREDICTIONS_DIR, basename)
+    dest = os.path.join(PREDICTIONS_DIR, f"{str(uuid4())}.zip")
     logger.info("moving %s to %s", location, dest)
     # @fixme change to move
     shutil.copy(location, dest)
+    return dest
 
 
 def _register_prediction_to_omero(label, extract_archive):
