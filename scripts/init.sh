@@ -16,6 +16,9 @@ airflow variables set PARALLEL_PREDICTIONS_PARAMS '{ "slide": { "class": "File",
 
 airflow variables set ROI_THRESHOLD '0.8'
 airflow variables set PROMORT_TOOLS_IMG  'lucalianas/promort_tools:dev'
+airflow variables set DOCKER_NETWORK $DOCKER_NETWORK
 
-airflow connections add promort --conn-host ${PROMORT_HOST} --conn-type ${PROMORT_CONN_TYPE} --conn-port ${PROMORT_PORT} --conn-login ${PROMORT_USER} --conn-password ${PROMORT_PASSWORD}
+if  ! airflow connections get promort; then
+  airflow connections add promort --conn-host ${PROMORT_HOST} --conn-type ${PROMORT_CONN_TYPE} --conn-port ${PROMORT_PORT} --conn-login ${PROMORT_USER} --conn-password ${PROMORT_PASSWORD}
+fi
 

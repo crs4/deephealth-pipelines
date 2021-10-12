@@ -1,0 +1,77 @@
+version: '3'
+
+services:
+
+  omero-db:
+    container_name: omero-db
+    image: postgres:9.6.12-alpine
+    networks:
+      deephealth:
+        aliases:
+          - ome-pg-server
+    environment:
+      - POSTGRES_DB=omero
+      - POSTGRES_USER=omero
+      - POSTGRES_PASSWORD=omero
+    volumes:
+      - ./ome-pg-data:/var/lib/postgresql/data
+
+  redis-server:
+    container_name: omero-redis-server
+    image: redis:6.0.3-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      deephealth:
+        aliases:
+          - redis-server
+    volumes:
+      - ./redis-data:/data
+
+  omero-server:
+    container_name: omero-server
+    image: openmicroscopy/omero-server:5.6.3-3
+    depends_on:
+      - omero-db
+    networks:
+      deephealth:
+        aliases:
+          - omero-server
+    ports:
+      - "4063:4063"
+      - "4064:4064"
+    environment:
+      - ROOTPASS=omero
+      - CONFIG_omero_db_host=ome-pg-server
+      - CONFIG_omero_db_user=omero
+      - CONFIG_omero_db_pass=omero
+      - CONFIG_omero_db_name=omero
+      - ome-server-var:/opt/omero/server/OMERO.server/var
+
+  omeseadragon:
+    image: ome_seadragon-web
+    depends_on:
+      - omero-server
+      - redis-server
+    entrypoint: ['/usr/local/bin/wait-for-it.sh', 'redis-server:6379', '--',
+                 '/usr/local/bin/wait-for-it.sh', 'omero-server:4063', '--timeout=600', '--strict', '--',
+                 '/usr/local/bin/wait-for-it.sh', 'omero-server:4064', '--timeout=600', '--strict', '--',
+                 '/usr/local/bin/entrypoint.sh']
+    networks:
+      deephealth:
+    ports:
+      - 4080:4080
+    environment:
+      - ROOTPASS=omero
+      - OMEROHOST=omero-server
+      - REDISHOST=redis-server
+      - IMAGES_REPOSITORY=/OMERO/
+      - MIRAX_FOLDER=/data/MIRAX
+      - DATASETS_REPOSITORY=${PREDICTIONS_DIR}
+      - GW_USER_NAME=ome_gw
+      - GW_USER_PASS=omero
+
+    volumes:
+      - ${STAGE_DIR}:/OMERO:ro
+      # - /mnt/tdm-dic/docker_volumes/ome_seadragon_mirax:/data/MIRAX:ro
+      - array_datasets:${PREDICTIONS_DIR}
+      - ${STAGE_DIR}:/data/MIRAX:ro

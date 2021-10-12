@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+
+  promort-db:
+    container_name: promort-db
+    image: postgres:9.6.12-alpine
+    networks:
+      deephealth:
+        aliases:
+          - promort-db
+    environment:
+      - POSTGRES_DB=promort
+      - POSTGRES_USER=ome_promort
+      - POSTGRES_PASSWORD=promort
+    volumes:
+      - promort-pg-data:/var/lib/postgresql/data
+
+  promort-web:
+    container_name: promort-web
+    image: promort-web:dev
+    depends_on: 
+      - promort-db
+    entrypoint: ['/usr/local/bin/wait-for-it.sh', 'promort-db:5432', '--',
+                 '/usr/local/bin/entrypoint.sh']
+    networks:
+      deephealth:
+    environment:
+      - DJANGO_CONFIG_FILE=/opt/django/conf/config.yaml
+    volumes:
+      - ./promort_config/:/opt/django/conf/
+
+
+volumes:
+  promort-pg-data: null
+
