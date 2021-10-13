@@ -73,5 +73,5 @@ services:
     volumes:
       - ${STAGE_DIR}:/OMERO:ro
       # - /mnt/tdm-dic/docker_volumes/ome_seadragon_mirax:/data/MIRAX:ro
-      - array_datasets:${PREDICTIONS_DIR}
+      - ${PREDICTIONS_DIR}:${PREDICTIONS_DIR}:rw
       - ${STAGE_DIR}:/data/MIRAX:ro
