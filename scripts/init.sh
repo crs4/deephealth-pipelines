@@ -15,7 +15,7 @@ airflow variables set SERIAL_PREDICTIONS_PARAMS '{ "slide": { "class": "File", "
 airflow variables set PARALLEL_PREDICTIONS_PARAMS '{ "slide": { "class": "File", "path": null }, "mode": "parallel", "tissue-low-level": 9, "tissue-low-label": "tissue_low", "tissue-high-level": 0, "tissue-low-chunk": 256, "tissue-high-label": "tissue_high", "tissue-high-filter": "tissue_low>0.8", "tissue-high-chunk": 2048, "tumor-chunk": 2048, "gpu": 0, "tumor-level": 1, "tumor-label": "tumor", "tumor-filter": "tissue_low>0.8", "tumor-batch": 1000000, "tissue-high-batch": 1000000}'
 
 airflow variables set ROI_THRESHOLD '0.8'
-airflow variables set PROMORT_TOOLS_IMG  'lucalianas/promort_tools:dev'
+airflow variables set PROMORT_TOOLS_IMG  $PROMORT_TOOLS_IMG
 airflow variables set DOCKER_NETWORK $DOCKER_NETWORK
 
 if  ! airflow connections get promort; then
