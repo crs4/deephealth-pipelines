@@ -28,10 +28,9 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
             - PROMORT_USER=${PROMORT_USER}
             - PROMORT_PASSWORD=${PROMORT_PASSWORD}
             - PREDICTIONS_DIR=${PREDICTIONS_DIR}
+            - DOCKER_NETWORK=${DOCKER_NETWORK}
+            - PROMORT_TOOLS_IMG=${PROMORT_TOOLS_IMG}
 
-    # - &airflow_env_file
-    #     env_file:
-    #         - ${AIRFLOW_ENV_FILE}
     - &airflow_volumes
         volumes:
             - ${AIRFLOW_HOME}:${AIRFLOW_HOME}
@@ -63,6 +62,8 @@ services:
         command: start_scheduler.sh
         depends_on:
             - mysql
+        networks:
+          deephealth:
 
     # starts after scheduler was launched, then waits untill all required for airflow tables have been
     # created (we just check dag_run table) and starts webserver
@@ -78,6 +79,8 @@ services:
         command: start_webserver.sh
         depends_on:
             - scheduler  # need to start only after cwl-airflow init was run
+        networks:
+          deephealth:
 
     # starts after scheduler was launched, then waits untill all required for airflow tables have been
     # created (we just check dag_run table) and starts apiserver
@@ -94,6 +97,8 @@ services:
         command: start_apiserver.sh --replay 60 --host 0.0.0.0
         depends_on:
             - scheduler  # need to start only after cwl-airflow init was run
+        networks:
+          deephealth:
 
     # starts MySQL server, creates empty ${MYSQL_DATABASE} with ${MYSQL_USER} and ${MYSQL_PASSWORD}
     mysql:
@@ -110,6 +115,8 @@ services:
             - MYSQL_USER=${MYSQL_USER}
             - MYSQL_PASSWORD=${MYSQL_PASSWORD}
         command: --explicit-defaults-for-timestamp=1
+        networks:
+          deephealth:
 
 
     init:
@@ -126,3 +133,11 @@ services:
         depends_on:
             - scheduler  # need to start only after cwl-airflow init was run
             - mysql
+        networks:
+          deephealth:
+
+networks:
+  deephealth:
+    name: ${DOCKER_NETWORK}
+
+
