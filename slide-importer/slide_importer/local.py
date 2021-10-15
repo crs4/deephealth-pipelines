@@ -68,21 +68,28 @@ class SlideImporter:
         self._user = user
         self._password = password
         self._stage_dir = self._get_stage_dir()
+        self._input_dir = self._get_input_dir()
         self.wait = wait
 
     def _get_stage_dir(self):
+        return self._get_var("stage_dir")
+
+    def _get_input_dir(self):
+        return self._get_var("input_dir")
+
+    def _get_var(self, name: str) -> str:
         response = requests.get(
-            os.path.join(self.server_url, "api/v1/variables/stage"),
+            os.path.join(self.server_url, f"api/v1/variables/{name}"),
             auth=HTTPBasicAuth(self._user, self._password),
         )
         response.raise_for_status()
         return response.json()["value"]
 
-    def import_slides(self, slides: Path, params: Dict = None) -> int:
+    def import_slides(self, params: Dict = None) -> int:
         params = params or {}
-        slides = [slides] if not slides.is_dir() else list(slides.iterdir())
+        slides = list(Path(self._input_dir).iterdir())
         faiures = 0
-        for slide in self._cp_files(slides):
+        for slide in self._iter_slides(slides):
             logger.info("Processing slide %s", slide)
             try:
                 self._run_pipeline(slide, params)
@@ -131,15 +138,13 @@ class SlideImporter:
             raise PipelineFailure(f"pipeline failed for slide {slide}")
         logger.info("pipeline run SUCCESSFULLY for slide %s", slide)
 
-    def _cp_files(self, slides: List[Path]) -> List[Path]:
-        logger.info("copying files %s to stage", slides)
+    def _iter_slides(self, slides: List[Path]) -> List[Path]:
         for slide in slides:
             if not slide.is_dir():
-                yield copy_slide(slide, self._stage_dir)
+                yield slide
 
 
 def main(
-    slides_path: str,
     *,
     server_url: str,
     user: str,
@@ -155,9 +160,12 @@ def main(
     logging.basicConfig()
     logger.setLevel(getattr(logging, log_level.upper()))
     password = getpass()
-    failures = SlideImporter(server_url, user, password, wait).import_slides(
-        Path(slides_path), params
-    )
+    failures = SlideImporter(
+        server_url,
+        user,
+        password,
+        wait,
+    ).import_slides(params)
     sys.exit(failures)
 
 

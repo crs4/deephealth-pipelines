@@ -19,7 +19,9 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
             - AIRFLOW_USER=admin
             - AIRLFLOW_PASSWORD=admin
             - CWLDOCKER_GPUS=device=0
+            - INPUT_DIR=${INPUT_DIR}
             - STAGE_DIR=${STAGE_DIR}
+            - FAILED_DIR=${FAILED_DIR}
             - OUT_DIR=${CWL_OUTPUTS_FOLDER}
             - OME_SEADRAGON_URL=${OME_SEADRAGON_URL}
             - PROMORT_HOST=${PROMORT_HOST}
