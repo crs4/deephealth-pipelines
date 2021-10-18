@@ -3,9 +3,12 @@ set -ex
 sleep 10
 airflow users create  --username $AIRFLOW_USER --firstname firstname --lastname lastname --role Admin --email firstname@lastname.org -p $AIRLFLOW_PASSWORD
 
-airflow variables set STAGE  $STAGE_DIR
+airflow variables set INPUT_DIR  $INPUT_DIR
+airflow variables set STAGE_DIR  $STAGE_DIR
 airflow variables set OUT_DIR  $OUT_DIR
+airflow variables set FAILED_DIR  $FAILED_DIR
 airflow variables set PREDICTIONS_DIR  $PREDICTIONS_DIR
+
 airflow variables set OME_SEADRAGON_REGISTER_SLIDE $OME_SEADRAGON_URL/ome_seadragon/mirax/register_slide
 airflow variables set OME_SEADRAGON_REGISTER_PREDICTIONS $OME_SEADRAGON_URL/ome_seadragon/arrays/register_dataset
 airflow variables set OME_SEADRAGON_URL $OME_SEADRAGON_URL
