@@ -27,9 +27,6 @@ services:
 ## Deploy
 
 ```
-git clone  http://mauro@repohub.crs4.it/DF/deephealth-pipelines
-cd deephealth-pipelines
-git checkout airflow
 docker-compose up -d
 ```
 
