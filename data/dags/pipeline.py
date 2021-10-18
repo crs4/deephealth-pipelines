@@ -10,7 +10,9 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict
 from uuid import uuid4
+
 import requests
+from airflow import DAG
 from airflow.api.common.experimental.trigger_dag import trigger_dag
 from airflow.decorators import task
 from airflow.exceptions import AirflowException
@@ -21,11 +23,29 @@ from airflow.utils import timezone
 from airflow.utils.state import State
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.types import DagRunType
-
-from airflow import DAG
+from utils import move_slide
 
 logger = logging.getLogger("watch-dir")
-logger.setLevel = logging.INFO
+
+OME_SEADRAGON_REGISTER_SLIDE = Variable.get("OME_SEADRAGON_REGISTER_SLIDE")
+OME_SEADRAGON_URL = Variable.get("OME_SEADRAGON_URL")
+
+PROMORT_CONNECTION = BaseHook.get_connection("promort")
+PREDICTIONS_DIR = Variable.get("PREDICTIONS_DIR")
+INPUT_DIR = Variable.get("INPUT_DIR")
+STAGE_DIR = Variable.get("STAGE_DIR")
+FAILED_DIR = Variable.get("FAILED_DIR")
+
+DOCKER_NETWORK = Variable.get("DOCKER_NETWORK", default_var="")
+
+PROMORT_TOOLS_IMG = Variable.get("PROMORT_TOOLS_IMG")
+
+
+def handle_error(ctx):
+    slide = ctx["params"]["slide"]
+    move_slide(os.path.join(STAGE_DIR, slide), FAILED_DIR)
+
+
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
@@ -34,28 +54,21 @@ default_args = {
     "email_on_failure": False,
     "email_on_retry": False,
     "retries": 1,
-    "retry_delay": timedelta(minutes=1),
+    "on_failure_callback": handle_error,
 }
-
-OME_SEADRAGON_REGISTER_SLIDE = Variable.get("OME_SEADRAGON_REGISTER_SLIDE")
-OME_SEADRAGON_URL = Variable.get("OME_SEADRAGON_URL")
-
-PROMORT_CONNECTION = BaseHook.get_connection("promort")
-PREDICTIONS_DIR = Variable.get("PREDICTIONS_DIR")
-DOCKER_NETWORK = Variable.get("DOCKER_NETWORK", default_var="")
-
-PROMORT_TOOLS_IMG = Variable.get("PROMORT_TOOLS_IMG")
 
 
 def create_dag():
     with DAG(
         "pipeline",
-        default_args=default_args,
+        on_failure_callback=handle_error,
         schedule_interval=None,
+        default_args=default_args,
     ) as dag:
 
         with TaskGroup(group_id="add_slide_to_backend"):
-            slide_info_ = add_slide_to_omero()
+            slide = prepare_data()
+            slide_info_ = add_slide_to_omero(slide)
             slide = slide_info_["slide"]
             slide_to_promort = add_slide_to_promort(slide_info_)
 
@@ -83,9 +96,15 @@ def create_dag():
         return dag
 
 
-@task(multiple_outputs=True)
-def add_slide_to_omero() -> Dict[str, str]:
+@task
+def prepare_data():
     slide = get_current_context()["params"]["slide"]
+    move_slide(os.path.join(INPUT_DIR, slide), STAGE_DIR)
+    return slide
+
+
+@task(multiple_outputs=True)
+def add_slide_to_omero(slide) -> Dict[str, str]:
     slide_name = os.path.splitext(slide)[0]
     response = requests.get(
         OME_SEADRAGON_REGISTER_SLIDE, params={"slide_name": slide_name}
