@@ -4,14 +4,14 @@ django:
   allowed_hosts:
     - "*"
   static_root: ./static/
-  session_cookie: promort_dev_session_id
+  session_cookie: PROMORT_SESSION_ID
   session_expire_on_close: false
 
 database:
   engine: postgresql
-  name: promort
-  user: promort-user
-  password: Pr0m0Rt
+  name: PROMORT_DB
+  user: PROMORT_USER
+  password: PROMORT_PASSWORD
   host: promort-db
   port: 5432
 

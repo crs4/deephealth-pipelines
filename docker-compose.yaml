@@ -18,7 +18,7 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
             - AIRFLOW__CWL__INPUTS_FOLDER=${CWL_INPUTS_FOLDER}
             - AIRFLOW_USER=admin
             - AIRLFLOW_PASSWORD=admin
-            - CWLDOCKER_GPUS=device=0
+            # - CWLDOCKER_GPUS=device=0
             - INPUT_DIR=${INPUT_DIR}
             - STAGE_DIR=${STAGE_DIR}
             - FAILED_DIR=${FAILED_DIR}
@@ -29,6 +29,7 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
             - PROMORT_PORT=${PROMORT_PORT}
             - PROMORT_USER=${PROMORT_USER}
             - PROMORT_PASSWORD=${PROMORT_PASSWORD}
+            - PROMORT_SESSION_ID=${PROMORT_SESSION_ID}
             - PREDICTIONS_DIR=${PREDICTIONS_DIR}
             - DOCKER_NETWORK=${DOCKER_NETWORK}
             - PROMORT_TOOLS_IMG=${PROMORT_TOOLS_IMG}
@@ -45,98 +46,98 @@ services:
 
     # starts after mysql was launched, then waits until airflow gets access to the database,
     # then runs cwl-airflow init creating all required tables in the database and starts scheduler
-    scheduler:
-        image: mdrio/cwl-airflow-scheduler
-        container_name: scheduler
-        volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
-            - /var/run/docker.sock:/var/run/docker.sock
-            - ${AIRFLOW_HOME}:${AIRFLOW_HOME}
-            - ${CWL_TMP_FOLDER}:${CWL_TMP_FOLDER}
-            - ${CWL_INPUTS_FOLDER}:${CWL_INPUTS_FOLDER}
-            - ${CWL_OUTPUTS_FOLDER}:${CWL_OUTPUTS_FOLDER}
-            - ${CWL_PICKLE_FOLDER}:${CWL_PICKLE_FOLDER}
-            - ./cwl/:/cwl
-            - ${PREDICTIONS_DIR}:${PREDICTIONS_DIR}
-        # privileged: true                                               # maybe I don't actully need it here
-        restart: always
-        <<: *airflow_env_var
-        # <<: *airflow_env_file
-        command: start_scheduler.sh
-        depends_on:
-            - mysql
-        networks:
-          deephealth:
-
-    # starts after scheduler was launched, then waits untill all required for airflow tables have been
-    # created (we just check dag_run table) and starts webserver
-    webserver:
-        image: mdrio/cwl-airflow-webserver
-        container_name: webserver
-        ports:
-            - ${AIRFLOW_WEBSERVER_PORT}:8080
-        <<: *airflow_volumes
-        <<: *airflow_env_var
-        # <<: *airflow_env_file
-        restart: always
-        command: start_webserver.sh
-        depends_on:
-            - scheduler  # need to start only after cwl-airflow init was run
-        networks:
-          deephealth:
-
-    # starts after scheduler was launched, then waits untill all required for airflow tables have been
-    # created (we just check dag_run table) and starts apiserver
-    # the default API --host 127.0.0.1 won't work from inside the docker container, so we used 0.0.0.0
-    apiserver:
-        image: mdrio/cwl-airflow-apiserver
-        container_name: apiserver
-        ports:
-            - ${CWL_AIRFLOW_API_PORT}:8081
-        <<: *airflow_volumes        
-        <<: *airflow_env_var
-        # <<: *airflow_env_file
-        restart: always
-        command: start_apiserver.sh --replay 60 --host 0.0.0.0
-        depends_on:
-            - scheduler  # need to start only after cwl-airflow init was run
-        networks:
-          deephealth:
-
-    # starts MySQL server, creates empty ${MYSQL_DATABASE} with ${MYSQL_USER} and ${MYSQL_PASSWORD}
-    mysql:
-        image: mysql:5.7
-        ports:
-            - ${MYSQL_PORT}:3306
-        volumes:
-            - ${MYSQL_DATA}:/var/lib/mysql
-            - /dev/urandom:/dev/random  # Not sure if I need it at all
-        restart: always
-        environment:
-            - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-            - MYSQL_DATABASE=${MYSQL_DATABASE}
-            - MYSQL_USER=${MYSQL_USER}
-            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-        command: --explicit-defaults-for-timestamp=1
-        networks:
-          deephealth:
-
-
-    init:
-        image: mdrio/cwl-airflow-apiserver
-        container_name: init
-        volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
+  scheduler:
+      image: mdrio/cwl-airflow-scheduler
+      container_name: scheduler
+      volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
+          - /var/run/docker.sock:/var/run/docker.sock
           - ${AIRFLOW_HOME}:${AIRFLOW_HOME}
-          - ./scripts/:/scripts
-        <<: *airflow_env_var
-        # <<: *airflow_env_file
-        restart: on-failure
-        entrypoint: bash
-        command: [ "/scripts/init.sh"]
-        depends_on:
-            - scheduler  # need to start only after cwl-airflow init was run
-            - mysql
-        networks:
-          deephealth:
+          - ${CWL_TMP_FOLDER}:${CWL_TMP_FOLDER}
+          - ${CWL_INPUTS_FOLDER}:${CWL_INPUTS_FOLDER}
+          - ${CWL_OUTPUTS_FOLDER}:${CWL_OUTPUTS_FOLDER}
+          - ${CWL_PICKLE_FOLDER}:${CWL_PICKLE_FOLDER}
+          - ./cwl/:/cwl
+          - ${PREDICTIONS_DIR}:${PREDICTIONS_DIR}
+      # privileged: true                                               # maybe I don't actully need it here
+      restart: always
+      <<: *airflow_env_var
+      # <<: *airflow_env_file
+      command: start_scheduler.sh
+      depends_on:
+          - mysql
+      networks:
+        deephealth:
+
+  # starts after scheduler was launched, then waits untill all required for airflow tables have been
+  # created (we just check dag_run table) and starts webserver
+  webserver:
+      image: mdrio/cwl-airflow-webserver
+      container_name: webserver
+      ports:
+          - ${AIRFLOW_WEBSERVER_PORT}:8080
+      <<: *airflow_volumes
+      <<: *airflow_env_var
+      # <<: *airflow_env_file
+      restart: always
+      command: start_webserver.sh
+      depends_on:
+          - scheduler  # need to start only after cwl-airflow init was run
+      networks:
+        deephealth:
+
+  # starts after scheduler was launched, then waits untill all required for airflow tables have been
+  # created (we just check dag_run table) and starts apiserver
+  # the default API --host 127.0.0.1 won't work from inside the docker container, so we used 0.0.0.0
+  apiserver:
+      image: mdrio/cwl-airflow-apiserver
+      container_name: apiserver
+      ports:
+          - ${CWL_AIRFLOW_API_PORT}:8081
+      <<: *airflow_volumes        
+      <<: *airflow_env_var
+      # <<: *airflow_env_file
+      restart: always
+      command: start_apiserver.sh --replay 60 --host 0.0.0.0
+      depends_on:
+          - scheduler  # need to start only after cwl-airflow init was run
+      networks:
+        deephealth:
+
+  # starts MySQL server, creates empty ${MYSQL_DATABASE} with ${MYSQL_USER} and ${MYSQL_PASSWORD}
+  mysql:
+      image: mysql:5.7
+      ports:
+          - ${MYSQL_PORT}:3306
+      volumes:
+          - ${MYSQL_DATA}:/var/lib/mysql
+          - /dev/urandom:/dev/random  # Not sure if I need it at all
+      restart: always
+      environment:
+          - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+          - MYSQL_DATABASE=${MYSQL_DATABASE}
+          - MYSQL_USER=${MYSQL_USER}
+          - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      command: --explicit-defaults-for-timestamp=1
+      networks:
+        deephealth:
+
+
+  init:
+      image: mdrio/cwl-airflow-apiserver
+      container_name: init
+      volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
+        - ${AIRFLOW_HOME}:${AIRFLOW_HOME}
+        - ./scripts/:/scripts
+      <<: *airflow_env_var
+      # <<: *airflow_env_file
+      restart: on-failure
+      entrypoint: bash
+      command: [ "/scripts/init.sh"]
+      depends_on:
+          - scheduler  # need to start only after cwl-airflow init was run
+          - mysql
+      networks:
+        deephealth:
 
 networks:
   deephealth:

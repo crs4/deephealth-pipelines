@@ -31,6 +31,8 @@ OME_SEADRAGON_REGISTER_SLIDE = Variable.get("OME_SEADRAGON_REGISTER_SLIDE")
 OME_SEADRAGON_URL = Variable.get("OME_SEADRAGON_URL")
 
 PROMORT_CONNECTION = BaseHook.get_connection("promort")
+PROMORT_SESSION_ID = Variable.get("PROMORT_SESSION_ID")
+
 PREDICTIONS_DIR = Variable.get("PREDICTIONS_DIR")
 INPUT_DIR = Variable.get("INPUT_DIR")
 STAGE_DIR = Variable.get("STAGE_DIR")
@@ -170,7 +172,7 @@ def add_slide_to_promort(slide_info: Dict[str, str]):
         "--passwd",
         PROMORT_CONNECTION.password,
         "--session-id",
-        "***REMOVED***",
+        PROMORT_SESSION_ID,
         "slides_importer",
         "--slide-label",
         slide,
@@ -215,7 +217,7 @@ def add_prediction_to_promort(
         "--passwd",
         PROMORT_CONNECTION.password,
         "--session-id",
-        "***REMOVED***",
+        PROMORT_SESSION_ID,
         "predictions_importer",
         "--prediction-label",
         prediction_label,
@@ -304,7 +306,7 @@ def create_tissue_fragments(prediction_id, shapes_filename):
         "--passwd",
         PROMORT_CONNECTION.password,
         "--session-id",
-        "***REMOVED***",
+        PROMORT_SESSION_ID,
         "tissue_fragments_importer",
         "--prediction-id",
         str(prediction_id),
