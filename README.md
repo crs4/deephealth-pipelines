@@ -17,7 +17,7 @@ Edit env variable ```CWL_DOCKER_GPUS ``` for setting the gpus to be used on dock
 ## Deploy
 
 ```
-docker-compose up -d
+./compose.sh up -d
 ```
 
 Check if ```init``` service exited with 0 code, otherwise restart it. It can fail for timing reason, typically sql tables do not exist yet.
