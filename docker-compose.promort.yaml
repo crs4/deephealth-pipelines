@@ -10,11 +10,11 @@ services:
         aliases:
           - promort-db
     environment:
-      - POSTGRES_DB=promort
-      - POSTGRES_USER=ome_promort
-      - POSTGRES_PASSWORD=promort
+      - POSTGRES_DB=${PROMORT_DB}
+      - POSTGRES_USER=${PROMORT_DB_USER}
+      - POSTGRES_PASSWORD=${PROMORT_DB_PASSWORD}
     volumes:
-      - promort-pg-data:/var/lib/postgresql/data
+      - ./data/promort-pg-data:/var/lib/postgresql/data
 
   promort-web:
     container_name: promort-web
@@ -27,10 +27,13 @@ services:
       deephealth:
     environment:
       - DJANGO_CONFIG_FILE=/opt/django/conf/config.yaml
+      - PROMORT_USER=${PROMORT_USER}
+      - PROMORT_PASSWORD=${PROMORT_PASSWORD}
+      - PROMORT_SESSION_ID=${PROMORT_SESSION_ID}
+
     volumes:
       - ./promort_config/:/opt/django/conf/
+      - ./scripts/:/scripts/
+      - ./scripts/promort/81_create_user.sh:/startup/81_create_user.sh
 
-
-volumes:
-  promort-pg-data: null
 

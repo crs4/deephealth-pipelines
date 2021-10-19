@@ -1,0 +1,44 @@
+django:
+  debug: false
+  secret_key: zpb*^cp1om!c27=5bp*#clz#e5369xaxnaz63nfzgn*lu7ryf&
+  allowed_hosts:
+    - "*"
+  static_root: ./static/
+  session_cookie: PROMORT_SESSION_ID
+  session_expire_on_close: false
+
+database:
+  engine: postgresql
+  name: PROMORT_DB
+  user: PROMORT_USER
+  password: PROMORT_PASSWORD
+  host: promort-db
+  port: 5432
+
+promort_config:
+  enable_shared_datasets: false
+
+email:
+  use_tls: true
+  host:
+  port:
+  user:
+  password:
+
+report:
+  subject_prefix: "[ProMort]"
+  recipients: []
+
+promort_groups:
+  rois_manager:
+    name: ROIS_MANAGERS
+  clinical_manager:
+    name: CLINICAL_MANAGERS 
+  gold_standard:
+    name: GOLD_STANDARD
+  odin_members:
+    name: ODIN_USERS
+
+ome_seadragon:
+  base_url: http://omeseadragon:4080/ome_seadragon/
+  static_files_url: http://omeseadragon:4080/static/

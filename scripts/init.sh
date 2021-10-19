@@ -21,7 +21,11 @@ airflow variables set ROI_THRESHOLD '0.8'
 airflow variables set PROMORT_TOOLS_IMG  $PROMORT_TOOLS_IMG
 airflow variables set DOCKER_NETWORK $DOCKER_NETWORK
 
+airflow variables set PROMORT_SESSION_ID $PROMORT_SESSION_ID
+
 if  ! airflow connections get promort; then
   airflow connections add promort --conn-host ${PROMORT_HOST} --conn-type ${PROMORT_CONN_TYPE} --conn-port ${PROMORT_PORT} --conn-login ${PROMORT_USER} --conn-password ${PROMORT_PASSWORD}
 fi
+
+
 
