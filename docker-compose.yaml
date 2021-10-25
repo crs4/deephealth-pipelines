@@ -58,6 +58,7 @@ services:
           - ${CWL_PICKLE_FOLDER}:${CWL_PICKLE_FOLDER}
           - ./cwl/:/cwl
           - ${PREDICTIONS_DIR}:${PREDICTIONS_DIR}
+          - ./scripts/bashrc-docker-gpu:/root/.bashrc
       # privileged: true                                               # maybe I don't actully need it here
       restart: always
       <<: *airflow_env_var

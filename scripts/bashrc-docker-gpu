@@ -1,0 +1,7 @@
+docker(){
+#  if [ $1 == "run" ] && [ ! -z "$CWLDOCKER_GPUS" ]; then
+  if [ $1 == "run" ]; then
+    command docker run --gpus $CWLDOCKER_GPUS "${@:2}"
+    
+  fi
+}
