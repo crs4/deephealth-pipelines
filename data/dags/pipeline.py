@@ -46,6 +46,18 @@ PROMORT_TOOLS_IMG = Variable.get("PROMORT_TOOLS_IMG")
 def handle_error(ctx):
     slide = ctx["params"]["slide"]
     move_slide(os.path.join(STAGE_DIR, slide), FAILED_DIR)
+    _remove_slide_from_omero(slide)
+
+
+def _remove_slide_from_omero(slide):
+    logger.info("removing slide %s", slide)
+    slide_no_ext = os.path.splitext(slide)[0]
+    url = requests.compat.urljoin(
+        OME_SEADRAGON_URL, f"ome_seadragon/mirax/delete_files/{slide_no_ext}"
+    )
+    response = requests.get(url)
+    logger.info("response.text %s", response.text)
+    response.raise_for_status()
 
 
 default_args = {
