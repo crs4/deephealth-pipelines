@@ -48,7 +48,7 @@ services:
       - ome-server-var:/opt/omero/server/OMERO.server/var
 
   omeseadragon:
-    image: ome_seadragon-web
+    image: mobydick.crs4.it:5000/ome_seadragon-web:dev
     depends_on:
       - omero-server
       - redis-server
