@@ -3,7 +3,6 @@ version: '3'
 services:
 
   omero-db:
-    container_name: omero-db
     image: postgres:9.6.12-alpine
     networks:
       deephealth:
@@ -17,7 +16,6 @@ services:
       - ./ome-pg-data:/var/lib/postgresql/data
 
   redis-server:
-    container_name: omero-redis-server
     image: redis:6.0.3-alpine
     command: ["redis-server", "--appendonly", "yes"]
     networks:
@@ -28,7 +26,6 @@ services:
       - ./redis-data:/data
 
   omero-server:
-    container_name: omero-server
     image: openmicroscopy/omero-server:5.6.3-3
     depends_on:
       - omero-db
