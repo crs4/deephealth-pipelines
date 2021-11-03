@@ -18,7 +18,7 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
             - AIRFLOW__CWL__INPUTS_FOLDER=${CWL_INPUTS_FOLDER}
             - AIRFLOW_USER=admin
             - AIRLFLOW_PASSWORD=admin
-            # - CWLDOCKER_GPUS=device=0
+            - CWLDOCKER_GPUS=$CWLDOCKER_GPUS
             - INPUT_DIR=${INPUT_DIR}
             - STAGE_DIR=${STAGE_DIR}
             - FAILED_DIR=${FAILED_DIR}
