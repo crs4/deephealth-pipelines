@@ -37,7 +37,7 @@ def _copy_file(slide_path: Path, dest_dir: Path):
 
 def _copy_mrxs(slide_path: Path, dest_dir: Path):
     dir_dest_path = Path(dest_dir, slide_path.stem)
-    shutil.copy(
+    shutil.copytree(
         Path(slide_path.parent.absolute(), slide_path.stem).absolute().as_posix(),
         dir_dest_path.absolute().as_posix(),
     )
