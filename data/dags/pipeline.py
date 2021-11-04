@@ -23,7 +23,7 @@ from airflow.utils import timezone
 from airflow.utils.state import State
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.types import DagRunType
-from utils import move_slide
+from utils import copy_slide, move_slide
 
 logger = logging.getLogger("watch-dir")
 
@@ -37,6 +37,7 @@ PREDICTIONS_DIR = Variable.get("PREDICTIONS_DIR")
 INPUT_DIR = Variable.get("INPUT_DIR")
 STAGE_DIR = Variable.get("STAGE_DIR")
 FAILED_DIR = Variable.get("FAILED_DIR")
+BACKUP_DIR = Variable.get("BACKUP_DIR")
 
 DOCKER_NETWORK = Variable.get("DOCKER_NETWORK", default_var="")
 
@@ -113,6 +114,11 @@ def create_dag():
 @task
 def prepare_data():
     slide = get_current_context()["params"]["slide"]
+    try:
+        copy_slide(os.path.join(INPUT_DIR, slide), BACKUP_DIR)
+    except FileExistsError:
+        logger.info("slide %s already in backup", slide)
+
     move_slide(os.path.join(INPUT_DIR, slide), STAGE_DIR)
     return slide
 

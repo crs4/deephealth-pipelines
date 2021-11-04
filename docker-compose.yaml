@@ -22,6 +22,7 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
             - INPUT_DIR=${INPUT_DIR}
             - STAGE_DIR=${STAGE_DIR}
             - FAILED_DIR=${FAILED_DIR}
+            - BACKUP_DIR=${BACKUP_DIR}
             - OUT_DIR=${CWL_OUTPUTS_FOLDER}
             - OME_SEADRAGON_URL=${OME_SEADRAGON_URL}
             - PROMORT_HOST=${PROMORT_HOST}
