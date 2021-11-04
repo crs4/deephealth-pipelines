@@ -23,6 +23,9 @@ chmod a+w $STAGE_DIR
 mkdir -p $FAILED_DIR
 chmod a+w $FAILED_DIR
 
+mkdir -p $BACKUP_DIR
+chmod a+w $BACKUP_DIR
+
 CWL_AIRFLOW_DIR=build/cwl-airflow
 if [ ! -d $CWL_AIRFLOW_DIR ]; then
   git clone git@github.com:mdrio/cwl-airflow.git $CWL_AIRFLOW_DIR

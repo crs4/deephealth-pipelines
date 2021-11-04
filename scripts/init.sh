@@ -8,6 +8,7 @@ airflow variables set STAGE_DIR  $STAGE_DIR
 airflow variables set OUT_DIR  $OUT_DIR
 airflow variables set FAILED_DIR  $FAILED_DIR
 airflow variables set PREDICTIONS_DIR  $PREDICTIONS_DIR
+airflow variables set BACKUP_DIR  $BACKUP_DIR
 
 airflow variables set OME_SEADRAGON_REGISTER_SLIDE $OME_SEADRAGON_URL/ome_seadragon/mirax/register_slide
 airflow variables set OME_SEADRAGON_REGISTER_PREDICTIONS $OME_SEADRAGON_URL/ome_seadragon/arrays/register_dataset
