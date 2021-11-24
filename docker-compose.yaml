@@ -41,6 +41,13 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
             - ${CWL_INPUTS_FOLDER}:${CWL_INPUTS_FOLDER}
             - ${CWL_OUTPUTS_FOLDER}:${CWL_OUTPUTS_FOLDER}
             - ${CWL_PICKLE_FOLDER}:${CWL_PICKLE_FOLDER}
+    - &build
+        build:
+          context: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
+          args:
+            CWL_AIRFLOW_VERSION: ${CWL_AIRFLOW_VERSION}
+            CWL_AIRFLOW_URL: ${CWL_AIRFLOW_URL}
+            EXTRA_PIP_DEPS: ${EXTRA_PIP_DEPS}
 
 services:
 
@@ -48,7 +55,7 @@ services:
     # then runs cwl-airflow init creating all required tables in the database and starts scheduler
   scheduler:
       # image: mdrio/cwl-airflow-scheduler
-      build: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
+      <<: *build
       container_name: scheduler
       volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
           - /var/run/docker.sock:/var/run/docker.sock
@@ -77,7 +84,7 @@ services:
   # created (we just check dag_run table) and starts webserver
   webserver:
       # image: mdrio/cwl-airflow-webserver
-      build: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
+      <<: *build
       container_name: webserver
       ports:
           - ${AIRFLOW_WEBSERVER_PORT}:8080
@@ -96,7 +103,7 @@ services:
   # the default API --host 127.0.0.1 won't work from inside the docker container, so we used 0.0.0.0
   apiserver:
       # image: mdrio/cwl-airflow-apiserver
-      build: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
+      <<: *build
       container_name: apiserver
       ports:
           - ${CWL_AIRFLOW_API_PORT}:8081
@@ -130,7 +137,7 @@ services:
 
 
   init:
-      build: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
+      <<: *build
       container_name: init
       volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
         - ${AIRFLOW_HOME}:${AIRFLOW_HOME}
