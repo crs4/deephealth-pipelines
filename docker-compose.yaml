@@ -60,6 +60,11 @@ services:
           - ${CWL_PICKLE_FOLDER}:${CWL_PICKLE_FOLDER}
           - ./cwl/:/cwl
           - ${PREDICTIONS_DIR}:${PREDICTIONS_DIR}
+          - ${INPUT_DIR}:${INPUT_DIR}
+          - ${STAGE_DIR}:${STAGE_DIR}
+          - ${FAILED_DIR}:${FAILED_DIR}
+          - ${BACKUP_DIR}:${BACKUP_DIR}
+
       # privileged: true                                               # maybe I don't actully need it here
       restart: always
       <<: *airflow_env_var
