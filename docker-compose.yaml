@@ -5,7 +5,7 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
     - &airflow_env_var
         environment:
             - AIRFLOW_HOME=${AIRFLOW_HOME}
-            # - CWL_INPUTS_FOLDER=${CWL_INPUTS_FOLDER}
+            - CWL_INPUTS_FOLDER=${CWL_INPUTS_FOLDER}
             - PROCESS_REPORT_URL=${PROCESS_REPORT_URL}
             - AIRFLOW__CORE__EXECUTOR=LocalExecutor
             - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
@@ -20,7 +20,6 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
             - AIRFLOW_PASSWORD=${AIRFLOW_PASSWORD}
             - CWLDOCKER_GPUS=$CWLDOCKER_GPUS
             - INPUT_DIR=${INPUT_DIR}
-            - STAGE_DIR=${STAGE_DIR}
             - FAILED_DIR=${FAILED_DIR}
             - BACKUP_DIR=${BACKUP_DIR}
             - OUT_DIR=${CWL_OUTPUTS_FOLDER}
@@ -60,10 +59,10 @@ services:
           - ${CWL_PICKLE_FOLDER}:${CWL_PICKLE_FOLDER}
           - ./cwl/:/cwl
           - ${PREDICTIONS_DIR}:${PREDICTIONS_DIR}
-          - ${INPUT_DIR}:${INPUT_DIR}
-          - ${STAGE_DIR}:${STAGE_DIR}
-          - ${FAILED_DIR}:${FAILED_DIR}
-          - ${BACKUP_DIR}:${BACKUP_DIR}
+          # - ${INPUT_DIR}:${INPUT_DIR}
+          # - ${STAGE_DIR}:${STAGE_DIR}
+          # - ${FAILED_DIR}:${FAILED_DIR}
+          # - ${BACKUP_DIR}:${BACKUP_DIR}
 
       # privileged: true                                               # maybe I don't actully need it here
       restart: always

@@ -4,7 +4,7 @@ sleep 10
 airflow users create  --username $AIRFLOW_USER --firstname firstname --lastname lastname --role Admin --email firstname@lastname.org -p $AIRFLOW_PASSWORD
 
 airflow variables set INPUT_DIR  $INPUT_DIR
-airflow variables set STAGE_DIR  $STAGE_DIR
+airflow variables set STAGE_DIR  $CWL_INPUTS_FOLDER
 airflow variables set OUT_DIR  $OUT_DIR
 airflow variables set FAILED_DIR  $FAILED_DIR
 airflow variables set PREDICTIONS_DIR  $PREDICTIONS_DIR
