@@ -16,8 +16,8 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
             - AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=${AIRFLOW_HOME}/logs/scheduler
             - AIRFLOW__API__AUTH_BACKEND=airflow.api.auth.backend.basic_auth
             - AIRFLOW__CWL__INPUTS_FOLDER=${CWL_INPUTS_FOLDER}
-            - AIRFLOW_USER=admin
-            - AIRLFLOW_PASSWORD=admin
+            - AIRFLOW_USER=${AIRFLOW_USER}
+            - AIRFLOW_PASSWORD=${AIRFLOW_PASSWORD}
             - CWLDOCKER_GPUS=$CWLDOCKER_GPUS
             - INPUT_DIR=${INPUT_DIR}
             - STAGE_DIR=${STAGE_DIR}
