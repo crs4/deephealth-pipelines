@@ -68,7 +68,7 @@ services:
       - GW_USER_PASS=omero
 
     volumes:
-      - ${STAGE_DIR}:/OMERO:ro
+      - ${CWL_INPUTS_FOLDER}:/OMERO:ro
       # - /mnt/tdm-dic/docker_volumes/ome_seadragon_mirax:/data/MIRAX:ro
       - ${PREDICTIONS_DIR}:${PREDICTIONS_DIR}:rw
-      - ${STAGE_DIR}:/data/MIRAX:ro
+      - ${CWL_INPUTS_FOLDER}:/data/MIRAX:ro

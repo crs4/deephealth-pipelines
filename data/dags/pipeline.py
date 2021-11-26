@@ -105,7 +105,7 @@ def create_dag():
                 )(prediction.value, slide, prediction_label, omero_id)
 
                 if prediction == Prediction.TUMOR:
-                    tumor_branch(prediction_label, prediction, slide, omero_id)
+                    tumor_branch(prediction_label, prediction, slide)
                 elif prediction == Prediction.TISSUE:
                     tissue_branch(prediction_label, prediction_path, prediction_id)
         return dag
@@ -268,17 +268,20 @@ def convert_to_tiledb(dataset_label):
     return _docker_run(command)
 
 
-def tumor_branch(prediction_label, prediction, slide_label, omero_id):
-    convert_to_tiledb(prediction_label) >> [
-        task(
-            _register_prediction_to_omero,
-            task_id=f"add_{prediction.value}.tiledb_to_omero",
-        )(f"{prediction_label}.tiledb", False),
-        task(
-            add_prediction_to_promort,
-            task_id=f"add_{prediction.value}.tiledb_to_promort",
-        )(prediction.value, slide_label, f"{prediction_label}.tiledb", omero_id),
-    ]
+def tumor_branch(prediction_label, prediction, slide_label):
+
+    register_to_omero = task(
+        _register_prediction_to_omero,
+        task_id=f"add_{prediction.value}.tiledb_to_omero",
+    )(f"{prediction_label}.tiledb", False)
+
+    omero_id = str(register_to_omero["omero_id"])
+    register_to_promort = task(
+        add_prediction_to_promort,
+        task_id=f"add_{prediction.value}.tiledb_to_promort",
+    )(prediction.value, slide_label, f"{prediction_label}.tiledb", omero_id)
+
+    convert_to_tiledb(prediction_label) >> register_to_omero >> register_to_promort
 
 
 def tissue_branch(dataset_label, dataset_path, prediction_id):
@@ -363,7 +366,7 @@ def _move_prediction_to_omero_dir(location):
     return dest
 
 
-def _register_prediction_to_omero(label, extract_archive):
+def _register_prediction_to_omero(label, extract_archive) -> Dict[str, str]:
     logger.info(
         "register_prediction_to_omero: label %s, extract_archive %s",
         label,
