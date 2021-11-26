@@ -1,23 +1,30 @@
 #!/usr/bin/env bash
-set -e
 
-sed  "s|AIRFLOW_HOME_PLACEHOLDER|$(pwd)/data|g" env.template > .env
+echoerr() { echo "$@" 1>&2; }
+
+if [ ! -f .env ]; then
+  sed  "s|AIRFLOW_HOME_PLACEHOLDER|$(pwd)/data|g" env.template > .env
+else
+   echoerr ".env found, skip creation"
+fi
 
 source .env
 
-cp promort_config/config.yaml.template promort_config/config.yaml
-
-sed  -i "s|PROMORT_DB|${PROMORT_DB}|g" promort_config/config.yaml
-sed  -i "s|PROMORT_USER|${PROMORT_USER}|g" promort_config/config.yaml
-sed  -i "s|PROMORT_PASSWORD|${PROMORT_PASSWORD}|g" promort_config/config.yaml
-sed  -i "s|PROMORT_SESSION_ID|${PROMORT_SESSION_ID}|g" promort_config/config.yaml
+if [ ! -f promort_config/config.yaml ]; then
+  cp promort_config/config.yaml.template promort_config/config.yaml
+  sed  -i "s|PROMORT_DB|${PROMORT_DB}|g" promort_config/config.yaml
+  sed  -i "s|PROMORT_USER|${PROMORT_USER}|g" promort_config/config.yaml
+  sed  -i "s|PROMORT_PASSWORD|${PROMORT_PASSWORD}|g" promort_config/config.yaml
+  sed  -i "s|PROMORT_SESSION_ID|${PROMORT_SESSION_ID}|g" promort_config/config.yaml
+else
+   echoerr "promort conf found, skip creation"
+fi
 
 mkdir -p $PREDICTIONS_DIR
 chmod a+w $PREDICTIONS_DIR
 
 mkdir -p $INPUT_DIR
 chmod a+w $INPUT_DIR
-
 
 mkdir -p $FAILED_DIR
 chmod a+w $FAILED_DIR
@@ -28,5 +35,7 @@ chmod a+w $BACKUP_DIR
 CWL_AIRFLOW_DIR=build/cwl-airflow
 if [ ! -d $CWL_AIRFLOW_DIR ]; then
   git clone https://github.com/mdrio/cwl-airflow.git $CWL_AIRFLOW_DIR
+else
+   echoerr "cwl aiflow found, skip cloning"
 fi
 
