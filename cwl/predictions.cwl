@@ -39,7 +39,7 @@ steps:
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: mdrio/slaid:0.64.0-beta.6-tissue_model-extract_tissue_eddl_1.1
+          dockerPull: mdrio/slaid:0.65.0-beta.8-tissue_model-eddl_2-gpu
 
         InitialWorkDirRequirement:
           listing:
@@ -134,7 +134,7 @@ steps:
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: mdrio/slaid:0.64.0-beta.6-tumor_model-level_1
+          dockerPull: mdrio/slaid:0.65.0-beta.8-tumor_model-level_1-gpu
         InitialWorkDirRequirement:
           listing:
             -  $(inputs.src)
