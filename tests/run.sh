@@ -8,6 +8,7 @@ running=$(docker-compose ps --services --filter "status=running" | grep init)
 while [ $running ]; do
   echo waiting for init to complete
   sleep 5
+  running=$(docker-compose ps --services --filter "status=running" | grep init)
 done
 
 cp -r tests/data/Mirax2-Fluorescence-2* $INPUT_DIR
