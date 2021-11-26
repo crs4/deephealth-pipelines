@@ -151,6 +151,7 @@ def main(
     log_level: str = "info",
     params: (str, "p") = None,
     wait: bool = False,
+    password: (str, "P") = None,
 ):
     """
     :params params: json containing params to override when running
@@ -159,7 +160,7 @@ def main(
     params = json.loads(params) if params else {}
     logging.basicConfig()
     logger.setLevel(getattr(logging, log_level.upper()))
-    password = getpass()
+    password = password or getpass()
     failures = SlideImporter(
         server_url,
         user,
