@@ -24,8 +24,8 @@
       - name: install deps
         run: pip install poetry
 
-      # - name: test
-      #   run: tests/run.sh
+      - name: test
+        run: tests/run.sh
 
       # - name: Bump version and push tag
       #   id: tag-creation
