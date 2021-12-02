@@ -23,7 +23,7 @@ while [ $running ]; do
 done
 
 ./compose.sh ps
-
+./compose.sh logs promort-web
 # ome_sedragon_status=$(check_omeseadragon $OME_SEADRAGON_URL)
 #
 # echo $ome_sedragon_status
