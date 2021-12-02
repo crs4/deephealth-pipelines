@@ -22,6 +22,8 @@ while [ $running ]; do
   running=$(docker-compose ps --services --filter "status=running" | grep init)
 done
 
+./compose.sh ps
+
 ome_sedragon_status=$(check_omeseadragon $OME_SEADRAGON_URL)
 
 echo $ome_sedragon_status
@@ -31,7 +33,6 @@ while [ $ome_sedragon_status -ne 0 ]; do
   ome_sedragon_status=$(check_omeseadragon $OME_SEADRAGON_URL)
 done
 
-./compose.sh ps
 
 cd slide-importer
 poetry install
