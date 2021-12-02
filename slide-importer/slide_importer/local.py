@@ -7,6 +7,7 @@ import os
 import shutil
 import sys
 import time
+from collections import defaultdict
 from getpass import getpass
 from pathlib import Path
 from typing import Dict, List
@@ -134,6 +135,34 @@ class SlideImporter:
             )
             response.raise_for_status()
             state = response.json()["state"]
+
+            instances_resp = requests.get(
+                os.path.join(
+                    self.server_url,
+                    f"api/v1/dags/{dag_id}/dagRuns/{dag_run_id}/taskInstances",
+                ),
+                auth=HTTPBasicAuth(self._user, self._password),
+                headers={"Content-type": "application/json"},
+            )
+            instances_resp.raise_for_status()
+
+            instances = defaultdict(list)
+            for t in instances_resp.json()["task_instances"]:
+                instances[t["state"]].append(t["task_id"])
+                if t["state"] in {"failed", "up_for_retry"}:
+                    log_resp = requests.get(
+                        os.path.join(
+                            self.server_url,
+                            f"api/v1/dags/{dag_id}/dagRuns/{dag_run_id}/taskInstances/{t['task_id']}/logs/{t['try_number']}",
+                        ),
+                        auth=HTTPBasicAuth(self._user, self._password),
+                        headers={"Content-type": "application/json"},
+                    )
+                    log_resp.raise_for_status()
+                    logger.error("log: %s,", log_resp.text)
+
+            logger.info("task instances: %s", instances)
+
         if state != "success":
             raise PipelineFailure(f"pipeline failed for slide {slide}")
         logger.info("pipeline run SUCCESSFULLY for slide %s", slide)
