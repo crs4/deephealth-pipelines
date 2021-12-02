@@ -7,7 +7,6 @@ check_omeseadragon (){
   echo $?
 }
 
-poetry shell
 ./create_env.sh
 cat promort_config/config.yaml
 source .env
@@ -22,7 +21,6 @@ while [ $running ]; do
   sleep 5
   running=$(docker-compose ps --services --filter "status=running" | grep init)
 done
-deactivate
 
 ome_sedragon_status=$(check_omeseadragon $OME_SEADRAGON_URL)
 
