@@ -43,3 +43,9 @@ python slide_importer/local.py  --user $AIRFLOW_USER -P $AIRFLOW_PASSWORD --serv
 
 [ $(curl http://localhost:4080/ome_seadragon/arrays/list/ | jq length) == 3 ]
 [ $(curl http://localhost:4080/ome_seadragon/get/images/index/ | jq length) == 1 ]
+
+# cd ..
+# docker cp tests/promort/test.py promort-web:/tmp
+# docker cp tests/promort/test.sh promort-web:/tmp
+# docker exec --user root promort-web chmod +x /tmp/test.sh
+# docker exec -it -w /home/promort/app/ProMort/promort promort-web /tmp/test.sh
