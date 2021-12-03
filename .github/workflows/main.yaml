@@ -7,7 +7,7 @@
       branches: [ master, develop ]
 
   jobs:
-    build:
+    build-test:
       runs-on: ubuntu-latest
       env:
         POETRY_VIRTUALENVS_CREATE: false
@@ -25,6 +25,9 @@
         run: |
           pip install poetry
           sudo apt install jq
+
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
 
       - name: test
         run: tests/run.sh
