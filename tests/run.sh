@@ -35,8 +35,11 @@ done
 
 
 cd slide-importer
-pip install poetry
 poetry shell
 poetry install
 set -e
 python slide_importer/local.py  --user $AIRFLOW_USER -P $AIRFLOW_PASSWORD --server-url http://localhost:8080  -p '{ "tissue-high-level": 8, "tissue-high-filter": "tissue_low>1", "tumor-filter": "tissue_low>1", "gpu": null,"tumor-chunk": 1024}' --wait
+
+
+[ $(curl http://localhost:4080/ome_seadragon/arrays/list/ | jq length) == 3 ]
+[ $(curl http://localhost:4080/ome_seadragon/get/images/index/ | jq length) == 1 ]

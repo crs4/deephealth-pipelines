@@ -21,6 +21,11 @@
         with:
           python-version: '3.8' 
 
+      - name: install deps
+        run: |
+          pip install poetry
+          sudo apt install jq
+
       - name: test
         run: tests/run.sh
 
