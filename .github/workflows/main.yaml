@@ -32,11 +32,11 @@
       - name: test
         run: tests/run.sh
 
-      # - name: Bump version and push tag
-      #   id: tag-creation
-      #   uses: anothrNick/github-tag-action@1.34.0
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     WITH_V: true
-      #
+      - name: Bump version and push tag
+        id: tag-creation
+        uses: anothrNick/github-tag-action@1.34.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+
 
