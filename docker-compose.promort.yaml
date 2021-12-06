@@ -42,3 +42,5 @@ services:
       - ./scripts/promort/81_create_user.sh:/startup/81_create_user.sh
 
 
+    ports:
+      - 8888:8080
