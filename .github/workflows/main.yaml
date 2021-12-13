@@ -11,6 +11,8 @@
       runs-on: ubuntu-latest
       env:
         POETRY_VIRTUALENVS_CREATE: false
+      permissions:
+        contents: write
 
       steps:
       - uses: actions/checkout@v2
