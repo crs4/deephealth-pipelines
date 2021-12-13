@@ -11,8 +11,6 @@
       runs-on: ubuntu-latest
       env:
         POETRY_VIRTUALENVS_CREATE: false
-      permissions:
-        contents: write
 
       steps:
       - uses: actions/checkout@v2
@@ -35,6 +33,7 @@
         run: tests/run.sh
 
       - name: Bump version and push tag
+        if: ${{ github.event_name == 'push' }}
         id: tag-creation
         uses: anothrNick/github-tag-action@1.36.0
         env:
