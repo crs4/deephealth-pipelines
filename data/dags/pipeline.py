@@ -78,6 +78,7 @@ def create_dag():
         "pipeline",
         on_failure_callback=handle_error,
         schedule_interval=None,
+        max_active_runs=1,
         default_args=default_args,
     ) as dag:
 
