@@ -33,49 +33,111 @@ import zipfile
 from pathlib import Path
 
 import yaml
+from cwl_utils.parser import load_document_by_uri
 from rocrate.rocrate import ROCrate
+from rocrate.model.contextentity import ContextEntity
 try:
     from yaml import CLoader as Loader
 except ImportError:
     from yaml import Loader
 
 
-# hardwired in gather_report pipeline step
-WORKFLOW_BASENAME = "predictions.cwl"
-PARAMS_BASENAME = "params.json"
 METADATA_BASENAME = "metadata.yaml"
 WORKFLOW_NAME = "Promort tissue and tumor prediction"
 WORKFLOW_VERSION = "0.1.0b1"
 WORKFLOW_URL = "https://github.com/crs4/deephealth-pipelines"
 WORKFLOW_LICENSE = "MIT"
+TYPE_MAP = {
+    "string": "Text",
+    "int": "Number",
+    "long": "Number",
+    "float": "Number",
+    "double": "Number",
+    "File": "File",
+}
 
 
-def get_params(source):
-    params_path = source / PARAMS_BASENAME
-    with open(params_path) as f:
-        return json.load(f)
-
-
-def get_workflow(source):
-    workflow_path = source / WORKFLOW_BASENAME
-    with open(workflow_path) as f:
+def get_metadata(source):
+    metadata_path = source / METADATA_BASENAME
+    with open(metadata_path) as f:
         return yaml.load(f, Loader=Loader)
 
 
+def get_params(source, metadata):
+    params_path = source / metadata["params"]
+    with open(params_path) as f:
+        params = json.load(f)
+    for k, v in params.items():
+        if isinstance(v, dict) and v.get("class") == "File":
+            params[k] = v["path"]
+    return params
+
+
+def get_workflow(source, metadata):
+    workflow_path = source / metadata["workflow"]
+    return load_document_by_uri(workflow_path)
+
+
+def get_param_types(params, wf_def):
+    rval = {}
+    inputs_by_id = {_.id.rsplit("#", 1)[1]: _ for _ in wf_def.inputs}
+    for k, v in params.items():
+        in_ = inputs_by_id[k]
+        t = in_.type
+        if isinstance(t, list):
+            t = [_ for _ in t if _ != "null"][0]
+        rval[k] = TYPE_MAP[t]
+    return rval
+
+
 def make_crate(source, out_dir):
-    workflow_path = source / WORKFLOW_BASENAME
+    metadata = get_metadata(source)
+    workflow_path = source / metadata["workflow"]
     crate = ROCrate(gen_preview=False)
-    wf_def = get_workflow(source)
+    wf_def = get_workflow(source, metadata)
     workflow = crate.add_workflow(
-        workflow_path, WORKFLOW_BASENAME, main=True, lang="cwl",
-        lang_version=wf_def["cwlVersion"], gen_cwl=False
+        workflow_path, metadata["workflow"], main=True, lang="cwl",
+        lang_version=wf_def.cwlVersion, gen_cwl=False
     )
     workflow["name"] = crate.root_dataset["name"] = WORKFLOW_NAME
     workflow["version"] = WORKFLOW_VERSION  # this should be in the report
     workflow["url"] = crate.root_dataset["isBasedOn"] = WORKFLOW_URL
     crate.root_dataset["license"] = WORKFLOW_LICENSE
     # No README.md for now
-    # TODO: add metadata on parameters
+    params = get_params(source, metadata)
+    param_types = get_param_types(params, wf_def)
+    inputs = []
+    for k, v in params.items():
+        properties = {
+            "@type": "FormalParameter",
+            "name": k,
+            "additionalType": param_types[k],
+            "value": v,
+        }
+        ce = ContextEntity(crate, properties=properties)
+        crate.add(ce)
+        inputs.append(ce)
+    workflow["input"] = inputs
+    outputs = []
+    for k, v in metadata["outs"].items():
+        assert v["class"] == "File"
+        properties = {
+            "@type": "FormalParameter",
+            "name": k,
+            "additionalType": "File",
+            "value": v["location"],
+        }
+        ce = ContextEntity(crate, properties=properties)
+        crate.add(ce)
+        outputs.append(ce)
+        path = source / v["location"]
+        assert path.is_file()
+        properties = {
+            "contentSize": v["size"],
+        }
+        crate.add_file(path, v["location"], properties=properties)
+    workflow["output"] = outputs
+    # TODO: store start_date and end_date somewhere
     crate.write(out_dir)
 
 
