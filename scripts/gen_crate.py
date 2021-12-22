@@ -81,7 +81,7 @@ def main(args):
     if zipfile.is_zipfile(args.run_report):
         source = tempfile.mkdtemp(prefix="gen_crate_")
         atexit.register(shutil.rmtree, source)
-        with zipfile.ZipFile(source, "r") as zf:
+        with zipfile.ZipFile(args.run_report, "r") as zf:
             zf.extractall(source)
         source = Path(source)
     else:
