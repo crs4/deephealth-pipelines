@@ -30,7 +30,7 @@
       #   continue-on-error: true
 
       - name: test
-        run: tests/run_all.sh
+        run: cd tests && ./run_all.sh
 
       - name: Bump version and push tag
         if: ${{ github.event_name == 'push' }}
