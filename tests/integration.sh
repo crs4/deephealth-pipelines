@@ -7,6 +7,7 @@ check_omeseadragon (){
   echo $?
 }
 
+cd ..
 ./create_env.sh
 cat promort_config/config.yaml
 source .env
@@ -46,4 +47,6 @@ python slide_importer/local.py  --user $AIRFLOW_USER -P $AIRFLOW_PASSWORD --serv
 
 curl -X POST   --cookie-jar /tmp/cookies http://localhost:8888/api/auth/login/ -d '{"username": "$PROMORT_USER", "password": "PROMORT_PASSWORD"}'
 [ $(curl --cookie /tmp/cookies -u $PROMORT_USER:$PROMORT_PASSWORD  http://localhost:8888/api/tissue_fragments_collections/ | jq length) == 1 ]
+cd ..
+./compose.sh down
 
