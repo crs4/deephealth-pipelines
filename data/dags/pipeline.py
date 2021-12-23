@@ -91,7 +91,7 @@ def create_dag():
 
         dag_info = predictions()
         slide_to_promort >> dag_info
-        gather_report(dag_info)
+        generate_rocrate(gather_report(dag_info))
 
         for prediction in Prediction:
             with TaskGroup(group_id=f"add_{prediction.value}_to_backend"):
@@ -452,6 +452,13 @@ def gather_report(dag_info):
 
     with open(os.path.join(output_dir, params_fn), "w") as params:
         json.dump(airflow_report["workflow_params"], params)
+    return output_dir
+
+
+@task
+def generate_rocrate(input_dir: str):
+    command = f"-v {input_dir}:{input_dir} prov_crate  -o {input_dir}/rocrate {input_dir}".split()
+    _docker_run(command)
 
 
 dag = create_dag()
