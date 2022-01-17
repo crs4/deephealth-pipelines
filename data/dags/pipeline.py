@@ -12,6 +12,7 @@ from typing import Dict
 from uuid import uuid4
 
 import requests
+import yaml
 from airflow import DAG
 from airflow.api.common.experimental.trigger_dag import trigger_dag
 from airflow.decorators import task
@@ -90,6 +91,7 @@ def create_dag():
 
         dag_info = predictions()
         slide_to_promort >> dag_info
+        generate_rocrate(gather_report(dag_info))
 
         for prediction in Prediction:
             with TaskGroup(group_id=f"add_{prediction.value}_to_backend"):
@@ -417,6 +419,46 @@ def _get_prediction_location(prediction, output_dir):
         report = json.load(report_file)
 
     return report[prediction.value]["location"].replace("file://", "")
+
+
+@task
+def gather_report(dag_info):
+    workflow_fn = "predictions.cwl"
+    params_fn = "params.json"
+    metadata_fn = "metadata.yaml"
+
+    dag_id, dag_run_id = dag_info["dag_id"], dag_info["dag_run_id"]
+    output_dir = _get_output_dir(dag_id, dag_run_id)
+    with open(os.path.join(output_dir, "workflow_report.json")) as f:
+        airflow_report = json.load(f)
+    report = {"workflow": workflow_fn, "params": params_fn, "outs": {}}
+
+    dag_run = get_current_context()["dag_run"]
+    task_predictions = dag_run.get_task_instance("predictions")
+    report["start_date"] = task_predictions.start_date
+    report["end_date"] = task_predictions.end_date
+
+    workflow_keys = ["workflow_def", "workflow_params"]
+    for key, value in airflow_report.items():
+        if key not in workflow_keys:
+            value["location"] = os.path.basename(value["location"])
+            report["outs"][key] = value
+
+    with open(os.path.join(output_dir, metadata_fn), "w") as report_file:
+        yaml.dump(report, report_file)
+
+    with open(os.path.join(output_dir, workflow_fn), "w") as cwl:
+        yaml.dump(airflow_report["workflow_def"], cwl)
+
+    with open(os.path.join(output_dir, params_fn), "w") as params:
+        json.dump(airflow_report["workflow_params"], params)
+    return output_dir
+
+
+@task
+def generate_rocrate(input_dir: str):
+    command = f"-v {input_dir}:{input_dir} prov_crate  -o {input_dir}/rocrate {input_dir}".split()
+    _docker_run(command)
 
 
 dag = create_dag()

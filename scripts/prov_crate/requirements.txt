@@ -1,0 +1,3 @@
+cwl-utils==0.13
+rocrate==0.5.2
+pyyaml~=5.4.0

@@ -1,0 +1,21 @@
+end_date: 2021-06-29 16:09:45.814390+00:00
+outs:
+  tissue:
+    basename: tissue_high.zip
+    checksum: sha1$d20916354b04248bc0409b6324b3d095dd8197ef
+    class: File
+    location: tissue_high.zip
+    nameext: .zip
+    nameroot: tissue_high
+    size: 4099
+  tumor:
+    basename: tumor.zip
+    checksum: sha1$6cfb52fd417017f7aa91e272592be1696e59a1a0
+    class: File
+    location: tumor.zip
+    nameext: .zip
+    nameroot: tumor
+    size: 70100
+params: params.json
+start_date: 2021-06-29 16:07:14.873427+00:00
+workflow: predictions.cwl

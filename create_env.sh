@@ -42,3 +42,5 @@ else
    echoerr "cwl aiflow found, skip cloning"
 fi
 
+cd scripts/prov_crate
+docker build . -t prov_crate
