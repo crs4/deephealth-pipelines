@@ -441,7 +441,7 @@ def gather_report(dag_info):
 @task
 def generate_rocrate(input_dir: str):
     command = f"-v {input_dir}:{input_dir} prov_crate  -o {input_dir}/rocrate {input_dir}".split()
-    _docker_run(command)
+    docker_run(command)
 
 
 dag = create_dag()
