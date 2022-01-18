@@ -20,6 +20,8 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
             - AIRFLOW_USER=${AIRFLOW_USER}
             - AIRFLOW_PASSWORD=${AIRFLOW_PASSWORD}
             - CWLDOCKER_GPUS=$CWLDOCKER_GPUS
+            - CWLDOCKER_ENV=$CWLDOCKER_ENV
+            - CWLDOCKER_PID=$CWLDOCKER_PID
             - INPUT_DIR=${INPUT_DIR}
             - FAILED_DIR=${FAILED_DIR}
             - BACKUP_DIR=${BACKUP_DIR}

@@ -1,7 +1,7 @@
 import logging
 import shutil
+import subprocess
 from pathlib import Path
-
 
 logger = logging.getLogger("local-importer")
 
@@ -64,3 +64,39 @@ def _move_mrxs(slide_path: Path, dest_dir: Path):
 
 _copy_registry["mrxs"] = _copy_mrxs
 _move_registry["mrxs"] = _move_mrxs
+
+
+def check_gpus_available(gpus):
+    logger.info("checking availibility for gpus %s", gpus)
+    if gpus:
+        cmd = f"--pid=host --gpus={gpus} ubuntu:20.04 bash -c nvidia-smi | grep ' C ' | wc -l"
+        gpu_processes = docker_run(cmd)
+        if int(gpu_processes):
+            raise RuntimeError(f"processes already running on gpu(s) {gpus}")
+
+
+def _run(command, shell=False):
+    logger.info(
+        "command %s", " ".join(command) if isinstance(command, list) else command
+    )
+    res = subprocess.run(command, capture_output=True, shell=shell)
+    if res.returncode:
+        logger.error(res.stderr)
+        res.check_returncode()
+
+    out = res.stdout.decode()
+    logger.info("out %s", out)
+    return out
+
+
+def docker_run(command, network: str = None):
+    docker_cmd = ["docker", "run", "--rm"]
+    if network:
+        docker_cmd.append("--network")
+        docker_cmd.append(network)
+    command = (
+        docker_cmd + command
+        if isinstance(command, list)
+        else " ".join(docker_cmd) + f" {command}"
+    )
+    return _run(command, shell=isinstance(command, str))

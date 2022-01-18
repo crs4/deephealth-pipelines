@@ -4,9 +4,8 @@ import json
 import logging
 import os
 import shutil
-import subprocess
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Dict
 from uuid import uuid4
@@ -24,7 +23,7 @@ from airflow.utils import timezone
 from airflow.utils.state import State
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.types import DagRunType
-from utils import copy_slide, move_slide
+from utils import check_gpus_available, copy_slide, docker_run, move_slide
 
 logger = logging.getLogger("watch-dir")
 
@@ -154,6 +153,10 @@ def predictions() -> Dict[str, str]:
 
     params.update(params_to_update)
     params["slide"]["path"] = slide
+    if "gpu" in params:
+        gpus = os.environ["CWLDOCKER_GPUS"]
+        check_gpus_available(gpus)
+
     execution_date = timezone.utcnow()
     triggered_run_id = DagRun.generate_run_id(DagRunType.MANUAL, execution_date)
     triggered_run_id = f"{slide}-{triggered_run_id}"
@@ -205,7 +208,7 @@ def add_slide_to_promort(slide_info: Dict[str, str]):
         OME_SEADRAGON_URL,
         "--ignore-duplicated",
     ]
-    _docker_run(command)
+    docker_run(command, DOCKER_NETWORK)
 
 
 def add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
@@ -251,7 +254,7 @@ def add_prediction_to_promort(
     ]
 
     logger.info("command %s", command)
-    res = _docker_run(command)
+    res = docker_run(command, DOCKER_NETWORK)
     return json.loads(res)["id"]
 
 
@@ -268,7 +271,7 @@ def convert_to_tiledb(dataset_label):
         "--out-folder",
         "/data",
     ]
-    return _docker_run(command)
+    return docker_run(command, DOCKER_NETWORK)
 
 
 def tumor_branch(prediction_label, prediction, slide_label):
@@ -311,7 +314,7 @@ def tissue_segmentation(label, path) -> str:
         "--scale-func",
         "shapely",
     ]
-    _docker_run(command)
+    docker_run(command, DOCKER_NETWORK)
     return out
 
 
@@ -336,7 +339,7 @@ def create_tissue_fragments(prediction_id, shapes_filename):
         str(prediction_id),
         shapes_filename,
     ]
-    _docker_run(command)
+    docker_run(command, network=DOCKER_NETWORK)
 
 
 class Prediction(Enum):
@@ -392,26 +395,6 @@ def _register_prediction_to_omero(label, extract_archive) -> Dict[str, str]:
 
     logger.info(res_json)
     return res_json
-
-
-def _run(command):
-    logger.info("command %s", " ".join(command))
-    res = subprocess.run(command, capture_output=True)
-    if res.returncode:
-        logger.error(res.stderr)
-        res.check_returncode()
-
-    out = res.stdout.decode()
-    logger.info("out %s", out)
-    return out
-
-
-def _docker_run(command):
-    docker_cmd = ["docker", "run", "--rm"]
-    if DOCKER_NETWORK:
-        docker_cmd.append("--network")
-        docker_cmd.append(DOCKER_NETWORK)
-    return _run(docker_cmd + command)
 
 
 def _get_prediction_location(prediction, output_dir):
