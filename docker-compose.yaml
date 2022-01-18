@@ -55,7 +55,6 @@ services:
         context: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
         args: 
           CWL_AIRFLOW_VERSION: *cwl_airflow_branch
-      container_name: scheduler
       volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
           - /var/run/docker.sock:/var/run/docker.sock
           - ${AIRFLOW_HOME}:${AIRFLOW_HOME}
@@ -87,7 +86,6 @@ services:
         context: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
         args: 
           CWL_AIRFLOW_VERSION: *cwl_airflow_branch
-      container_name: webserver
       ports:
           - ${AIRFLOW_WEBSERVER_PORT}:8080
       <<: *airflow_volumes
@@ -146,7 +144,6 @@ services:
         context: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
         args: 
           CWL_AIRFLOW_VERSION: *cwl_airflow_branch
-      container_name: init
       volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
         - ${AIRFLOW_HOME}:${AIRFLOW_HOME}
         - ./scripts/:/scripts
