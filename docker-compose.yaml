@@ -107,7 +107,6 @@ services:
         context: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
         args: 
           CWL_AIRFLOW_VERSION: *cwl_airflow_branch
-      container_name: apiserver
       ports:
           - ${CWL_AIRFLOW_API_PORT}:8081
       <<: *airflow_volumes        
