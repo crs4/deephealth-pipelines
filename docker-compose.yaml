@@ -20,6 +20,8 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
             - AIRFLOW_USER=${AIRFLOW_USER}
             - AIRFLOW_PASSWORD=${AIRFLOW_PASSWORD}
             - CWLDOCKER_GPUS=$CWLDOCKER_GPUS
+            - CWLDOCKER_ENV=$CWLDOCKER_ENV
+            - CWLDOCKER_PID=$CWLDOCKER_PID
             - INPUT_DIR=${INPUT_DIR}
             - FAILED_DIR=${FAILED_DIR}
             - BACKUP_DIR=${BACKUP_DIR}
@@ -53,7 +55,6 @@ services:
         context: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
         args: 
           CWL_AIRFLOW_VERSION: *cwl_airflow_branch
-      container_name: scheduler
       volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
           - /var/run/docker.sock:/var/run/docker.sock
           - ${AIRFLOW_HOME}:${AIRFLOW_HOME}
@@ -85,7 +86,6 @@ services:
         context: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
         args: 
           CWL_AIRFLOW_VERSION: *cwl_airflow_branch
-      container_name: webserver
       ports:
           - ${AIRFLOW_WEBSERVER_PORT}:8080
       <<: *airflow_volumes
@@ -107,7 +107,6 @@ services:
         context: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
         args: 
           CWL_AIRFLOW_VERSION: *cwl_airflow_branch
-      container_name: apiserver
       ports:
           - ${CWL_AIRFLOW_API_PORT}:8081
       <<: *airflow_volumes        
@@ -144,7 +143,6 @@ services:
         context: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
         args: 
           CWL_AIRFLOW_VERSION: *cwl_airflow_branch
-      container_name: init
       volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
         - ${AIRFLOW_HOME}:${AIRFLOW_HOME}
         - ./scripts/:/scripts

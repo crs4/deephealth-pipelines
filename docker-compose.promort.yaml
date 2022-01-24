@@ -3,7 +3,6 @@ version: '3'
 services:
 
   promort-db:
-    container_name: promort-db
     image: postgres:9.6.12-alpine
     networks:
       deephealth:
@@ -17,7 +16,6 @@ services:
       - ./data/promort-pg-data:/var/lib/postgresql/data
 
   promort-web:
-    container_name: promort-web
     image: promort-web:dev
     build:
       context: ./build/promort

@@ -44,3 +44,5 @@ fi
 
 cd scripts/prov_crate
 docker build . -t prov_crate
+
+docker pull ubuntu:20.04
