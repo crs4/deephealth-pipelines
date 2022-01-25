@@ -12,7 +12,9 @@ Then edit properly the output ```.env```. Be sure to set safe user/password valu
 
 Edit env variable ```CWL_DOCKER_GPUS ``` for setting the gpus to be used on docker container used for predictions.
 
-
+N.B
+Change ```omeseadragon:4080``` in ome_seadragon.base_url and ome_seadragon.static_files_url to the local machine address.
+The port is the same specified in omeseadragon-nginx service (docker-compose.omero.yaml).
 
 ## Deploy
 

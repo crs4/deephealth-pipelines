@@ -72,3 +72,19 @@ services:
       # - /mnt/tdm-dic/docker_volumes/ome_seadragon_mirax:/data/MIRAX:ro
       - ${PREDICTIONS_DIR}:${PREDICTIONS_DIR}:rw
       - ${CWL_INPUTS_FOLDER}:/data/MIRAX:ro
+
+  omeseadragon-nginx:
+    # build: /opt/git/ome_seadragon-nginx-docker
+    image: crs4/ome_seadragon-nginx:0.8.1-ome5.11
+    depends_on:
+      - omeseadragon
+    entrypoint: ['/usr/local/bin/wait-for-it.sh', 'omeseadragon:4080', '--timeout=600', '--strict', '--',
+                 '/usr/local/bin/entrypoint.sh']
+    ports:
+      - "8090:80"
+    networks:
+      deephealth:
+    environment:
+      - OMEROWEBHOST=omeseadragon
+      # - VIRTUAL_HOST=ome-seadragon.mobydick
+
