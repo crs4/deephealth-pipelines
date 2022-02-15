@@ -99,14 +99,50 @@ def add_action(crate, metadata):
         "name": f"Promort prediction run on {start_date}",
         "startTime": start_date,
         "endTime": end_date,
-        # "instrument": workflow,
-        # "object": workflow["input"],
-        # "result": workflow["output"],
     }
     action = crate.add(ContextEntity(crate, properties=properties))
     action["instrument"] = workflow
-    action["object"] = workflow["input"]
-    action["result"] = workflow["output"]
+    return action
+
+
+def add_params(params, param_types, metadata, source, crate, action):
+    workflow = crate.mainEntity
+    inputs, outputs, objects, results = [], [], [], []
+    for k, v in params.items():
+        in_ = crate.add(ContextEntity(crate, properties={
+            "@type": "FormalParameter",
+            "name": k,
+            "additionalType": param_types[k],
+        }))
+        inputs.append(in_)
+        if isinstance(v, dict) and v.get("class") == "File":
+            obj = crate.add_file(v["path"])
+        else:
+            obj = crate.add(ContextEntity(crate, properties={
+                "@type": "PropertyValue",
+                "additionalType": param_types[k],
+                "name": k,
+                "value": v,
+            }))
+        objects.append(obj)
+    workflow["input"] = inputs
+    action["object"] = objects
+    for k, v in metadata["outs"].items():
+        assert v["class"] == "File"
+        out = crate.add(ContextEntity(crate, properties={
+            "@type": "FormalParameter",
+            "name": k,
+            "additionalType": "File",
+        }))
+        outputs.append(out)
+        path = source / v["location"]
+        assert path.is_file()
+        res = crate.add_file(path, v["location"], properties={
+            "contentSize": v["size"],
+        })
+        results.append(res)
+    workflow["output"] = outputs
+    action["result"] = results
 
 
 def make_crate(source, out_dir):
@@ -123,40 +159,10 @@ def make_crate(source, out_dir):
     workflow["url"] = crate.root_dataset["isBasedOn"] = WORKFLOW_URL
     crate.root_dataset["license"] = WORKFLOW_LICENSE
     # No README.md for now
+    action = add_action(crate, metadata)
     params = get_params(source, metadata)
     param_types = get_param_types(params, wf_def)
-    inputs = []
-    for k, v in params.items():
-        properties = {
-            "@type": "FormalParameter",
-            "name": k,
-            "additionalType": param_types[k],
-            "value": v,
-        }
-        ce = ContextEntity(crate, properties=properties)
-        crate.add(ce)
-        inputs.append(ce)
-    workflow["input"] = inputs
-    outputs = []
-    for k, v in metadata["outs"].items():
-        assert v["class"] == "File"
-        properties = {
-            "@type": "FormalParameter",
-            "name": k,
-            "additionalType": "File",
-            "value": v["location"],
-        }
-        ce = ContextEntity(crate, properties=properties)
-        crate.add(ce)
-        outputs.append(ce)
-        path = source / v["location"]
-        assert path.is_file()
-        properties = {
-            "contentSize": v["size"],
-        }
-        crate.add_file(path, v["location"], properties=properties)
-    workflow["output"] = outputs
-    add_action(crate, metadata)
+    add_params(params, param_types, metadata, source, crate, action)
     crate.write(out_dir)
 
 
