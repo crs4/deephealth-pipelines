@@ -4,7 +4,7 @@
         {
             "@id": "./",
             "@type": "Dataset",
-            "datePublished": "2021-12-23T09:58:30+00:00",
+            "datePublished": "2022-02-15T10:41:32+00:00",
             "hasPart": [
                 {
                     "@id": "predictions.cwl"
@@ -29,9 +29,14 @@
             "about": {
                 "@id": "./"
             },
-            "conformsTo": {
-                "@id": "https://w3id.org/ro/crate/1.1"
-            }
+            "conformsTo": [
+                {
+                    "@id": "https://w3id.org/ro/crate/1.1"
+                },
+                {
+                    "@id": "https://w3id.org/workflowhub/workflow-ro-crate/1.0"
+                }
+            ]
         },
         {
             "@id": "predictions.cwl",
@@ -42,65 +47,65 @@
             ],
             "input": [
                 {
-                    "@id": "#d88b58a2-295c-4b67-83b9-2567ccdb71b9"
+                    "@id": "#fa691609-0414-4d18-8c8c-c03acd2122c7"
                 },
                 {
-                    "@id": "#e249a04b-b76e-403e-9e1d-24738fd9f273"
+                    "@id": "#c3492939-0518-4b42-8d36-9cd18453df71"
                 },
                 {
-                    "@id": "#a3340708-f775-45f7-99bf-e5cb8b95d715"
+                    "@id": "#35a6badf-9b9b-4057-8288-6114ab20c324"
                 },
                 {
-                    "@id": "#4464a310-2fff-4ebe-85c1-f17c1325dd7b"
+                    "@id": "#f72c0eb3-f939-44c9-9363-370063fd19de"
                 },
                 {
-                    "@id": "#a39f026d-041b-4f57-9a28-2f8c05051cc8"
+                    "@id": "#32137991-adfb-4928-a29f-1365e62b8200"
                 },
                 {
-                    "@id": "#9ed33ab1-1f53-4a5f-af4d-437912eb83a8"
+                    "@id": "#0425e87e-4ce0-40c9-89fe-eeefa1ccca7b"
                 },
                 {
-                    "@id": "#a408e7e5-d616-4a34-be04-0515f8d3acaa"
+                    "@id": "#f6c0b15a-85d6-4586-a5c5-fab304c31d2b"
                 },
                 {
-                    "@id": "#792aaa0d-30e0-47ec-a384-990c62d521aa"
+                    "@id": "#c49ad18c-f656-442c-926c-1a494c31300f"
                 },
                 {
-                    "@id": "#b287e5b5-3399-47fd-bbea-df93d1fd9583"
+                    "@id": "#48c6ba00-0192-4f46-b357-04e4bb2de9eb"
                 },
                 {
-                    "@id": "#5a86bf66-60ed-475e-a184-5a5f3e00251f"
+                    "@id": "#bbf5fb97-1287-4189-bd49-c71fd51796f1"
                 },
                 {
-                    "@id": "#41f51caf-1b7e-49e1-a029-6baef8591b10"
+                    "@id": "#a0a6ef94-d54d-4a72-8098-c4280753ab8b"
                 },
                 {
-                    "@id": "#d7fbcaeb-709a-4272-ac2a-4f2ded61f093"
+                    "@id": "#36e6fcc6-f4a5-4709-99ab-0dafb8b05c61"
                 },
                 {
-                    "@id": "#2f2168ba-524b-4afe-b4e1-3c7d0d2d7b45"
+                    "@id": "#46ffd3ef-318a-4a9c-ac4b-d938195d781d"
                 },
                 {
-                    "@id": "#71ffbf48-848c-4288-b123-ad3d093568f9"
+                    "@id": "#a8da2a6b-6d5b-457d-9b9f-a0a940b52bc3"
                 }
             ],
             "name": "Promort tissue and tumor prediction",
             "output": [
                 {
-                    "@id": "#9bf0095a-2b12-4384-9800-d4d333af45a8"
+                    "@id": "#1e2b5a3e-8128-4b82-8660-a7fd84ae6d38"
                 },
                 {
-                    "@id": "#7909197e-04cb-426d-a25a-b9be488a5b5f"
+                    "@id": "#5c56d714-1512-4190-97bd-fcbdeb4c3fe3"
                 }
             ],
             "programmingLanguage": {
-                "@id": "#cwl"
+                "@id": "https://w3id.org/workflowhub/workflow-ro-crate#cwl"
             },
             "url": "https://github.com/crs4/deephealth-pipelines",
             "version": "0.1.0b1"
         },
         {
-            "@id": "#cwl",
+            "@id": "https://w3id.org/workflowhub/workflow-ro-crate#cwl",
             "@type": "ComputerLanguage",
             "alternateName": "CWL",
             "identifier": {
@@ -113,105 +118,105 @@
             "version": "v1.2"
         },
         {
-            "@id": "#d88b58a2-295c-4b67-83b9-2567ccdb71b9",
+            "@id": "#fa691609-0414-4d18-8c8c-c03acd2122c7",
             "@type": "FormalParameter",
             "additionalType": "File",
             "name": "slide",
             "value": "http://slide-repository:5000/slides/DHT00001-1.mrxs"
         },
         {
-            "@id": "#e249a04b-b76e-403e-9e1d-24738fd9f273",
+            "@id": "#c3492939-0518-4b42-8d36-9cd18453df71",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "mode",
             "value": "serial"
         },
         {
-            "@id": "#a3340708-f775-45f7-99bf-e5cb8b95d715",
+            "@id": "#35a6badf-9b9b-4057-8288-6114ab20c324",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tissue-low-level",
             "value": 9
         },
         {
-            "@id": "#4464a310-2fff-4ebe-85c1-f17c1325dd7b",
+            "@id": "#f72c0eb3-f939-44c9-9363-370063fd19de",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tissue-low-label",
             "value": "tissue_low"
         },
         {
-            "@id": "#a39f026d-041b-4f57-9a28-2f8c05051cc8",
+            "@id": "#32137991-adfb-4928-a29f-1365e62b8200",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tissue-high-level",
             "value": 8
         },
         {
-            "@id": "#9ed33ab1-1f53-4a5f-af4d-437912eb83a8",
+            "@id": "#0425e87e-4ce0-40c9-89fe-eeefa1ccca7b",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tissue-low-chunk",
             "value": 256
         },
         {
-            "@id": "#a408e7e5-d616-4a34-be04-0515f8d3acaa",
+            "@id": "#f6c0b15a-85d6-4586-a5c5-fab304c31d2b",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tissue-high-label",
             "value": "tissue_high"
         },
         {
-            "@id": "#792aaa0d-30e0-47ec-a384-990c62d521aa",
+            "@id": "#c49ad18c-f656-442c-926c-1a494c31300f",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tissue-high-filter",
             "value": "tissue_low>1"
         },
         {
-            "@id": "#b287e5b5-3399-47fd-bbea-df93d1fd9583",
+            "@id": "#48c6ba00-0192-4f46-b357-04e4bb2de9eb",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tissue-high-chunk",
             "value": 1536
         },
         {
-            "@id": "#5a86bf66-60ed-475e-a184-5a5f3e00251f",
+            "@id": "#bbf5fb97-1287-4189-bd49-c71fd51796f1",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tumor-chunk",
             "value": 1536
         },
         {
-            "@id": "#41f51caf-1b7e-49e1-a029-6baef8591b10",
+            "@id": "#a0a6ef94-d54d-4a72-8098-c4280753ab8b",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "gpu",
             "value": 0
         },
         {
-            "@id": "#d7fbcaeb-709a-4272-ac2a-4f2ded61f093",
+            "@id": "#36e6fcc6-f4a5-4709-99ab-0dafb8b05c61",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tumor-level",
             "value": 1
         },
         {
-            "@id": "#2f2168ba-524b-4afe-b4e1-3c7d0d2d7b45",
+            "@id": "#46ffd3ef-318a-4a9c-ac4b-d938195d781d",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tumor-label",
             "value": "tumor"
         },
         {
-            "@id": "#71ffbf48-848c-4288-b123-ad3d093568f9",
+            "@id": "#a8da2a6b-6d5b-457d-9b9f-a0a940b52bc3",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tumor-filter",
             "value": "tissue_low>1"
         },
         {
-            "@id": "#9bf0095a-2b12-4384-9800-d4d333af45a8",
+            "@id": "#1e2b5a3e-8128-4b82-8660-a7fd84ae6d38",
             "@type": "FormalParameter",
             "additionalType": "File",
             "name": "tissue",
@@ -223,7 +228,7 @@
             "contentSize": 4099
         },
         {
-            "@id": "#7909197e-04cb-426d-a25a-b9be488a5b5f",
+            "@id": "#5c56d714-1512-4190-97bd-fcbdeb4c3fe3",
             "@type": "FormalParameter",
             "additionalType": "File",
             "name": "tumor",
