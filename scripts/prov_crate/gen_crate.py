@@ -90,6 +90,25 @@ def get_param_types(params, wf_def):
     return rval
 
 
+def add_action(crate, metadata):
+    start_date = metadata["start_date"].isoformat()
+    end_date = metadata["end_date"].isoformat()
+    workflow = crate.mainEntity
+    properties = {
+        "@type": "CreateAction",
+        "name": f"Promort prediction run on {start_date}",
+        "startTime": start_date,
+        "endTime": end_date,
+        # "instrument": workflow,
+        # "object": workflow["input"],
+        # "result": workflow["output"],
+    }
+    action = crate.add(ContextEntity(crate, properties=properties))
+    action["instrument"] = workflow
+    action["object"] = workflow["input"]
+    action["result"] = workflow["output"]
+
+
 def make_crate(source, out_dir):
     metadata = get_metadata(source)
     workflow_path = source / metadata["workflow"]
@@ -137,7 +156,7 @@ def make_crate(source, out_dir):
         }
         crate.add_file(path, v["location"], properties=properties)
     workflow["output"] = outputs
-    # TODO: store start_date and end_date somewhere
+    add_action(crate, metadata)
     crate.write(out_dir)
 
 

@@ -4,7 +4,7 @@
         {
             "@id": "./",
             "@type": "Dataset",
-            "datePublished": "2022-02-15T10:41:32+00:00",
+            "datePublished": "2022-02-15T11:52:47+00:00",
             "hasPart": [
                 {
                     "@id": "predictions.cwl"
@@ -47,55 +47,55 @@
             ],
             "input": [
                 {
-                    "@id": "#fa691609-0414-4d18-8c8c-c03acd2122c7"
+                    "@id": "#dbff4668-4dff-4eea-9e2e-55729d90d0f3"
                 },
                 {
-                    "@id": "#c3492939-0518-4b42-8d36-9cd18453df71"
+                    "@id": "#fbc431d6-d7ec-4177-a7a9-45b502e0f8bd"
                 },
                 {
-                    "@id": "#35a6badf-9b9b-4057-8288-6114ab20c324"
+                    "@id": "#2e116ef6-0887-4a29-a1cc-ab08606bcf35"
                 },
                 {
-                    "@id": "#f72c0eb3-f939-44c9-9363-370063fd19de"
+                    "@id": "#67b1e67a-888d-4d23-91a8-863f11ac70fe"
                 },
                 {
-                    "@id": "#32137991-adfb-4928-a29f-1365e62b8200"
+                    "@id": "#4e520101-54e3-48cf-bcb1-f0114d7a18f7"
                 },
                 {
-                    "@id": "#0425e87e-4ce0-40c9-89fe-eeefa1ccca7b"
+                    "@id": "#40a102ad-1749-4542-868f-d1b1353e478f"
                 },
                 {
-                    "@id": "#f6c0b15a-85d6-4586-a5c5-fab304c31d2b"
+                    "@id": "#3fe70f9b-c167-40ac-af72-7d572f2c1100"
                 },
                 {
-                    "@id": "#c49ad18c-f656-442c-926c-1a494c31300f"
+                    "@id": "#4c720536-10cb-4fab-80e1-84c27009b346"
                 },
                 {
-                    "@id": "#48c6ba00-0192-4f46-b357-04e4bb2de9eb"
+                    "@id": "#ec05755a-c046-4385-9991-3fb219d55654"
                 },
                 {
-                    "@id": "#bbf5fb97-1287-4189-bd49-c71fd51796f1"
+                    "@id": "#acf5ed12-0236-4684-990d-bab67fbb3301"
                 },
                 {
-                    "@id": "#a0a6ef94-d54d-4a72-8098-c4280753ab8b"
+                    "@id": "#c5c47e8d-0385-4a33-ae4c-e6b79d993856"
                 },
                 {
-                    "@id": "#36e6fcc6-f4a5-4709-99ab-0dafb8b05c61"
+                    "@id": "#fe7ac610-f125-4b06-af61-281d82743971"
                 },
                 {
-                    "@id": "#46ffd3ef-318a-4a9c-ac4b-d938195d781d"
+                    "@id": "#75dd352a-6094-4db9-8a3e-903944c644e6"
                 },
                 {
-                    "@id": "#a8da2a6b-6d5b-457d-9b9f-a0a940b52bc3"
+                    "@id": "#b35fc14c-e665-45c2-9979-77959fd039df"
                 }
             ],
             "name": "Promort tissue and tumor prediction",
             "output": [
                 {
-                    "@id": "#1e2b5a3e-8128-4b82-8660-a7fd84ae6d38"
+                    "@id": "#5dc75cc6-1ca0-4b3c-bbc0-5cbee2bd5440"
                 },
                 {
-                    "@id": "#5c56d714-1512-4190-97bd-fcbdeb4c3fe3"
+                    "@id": "#57a0ae2b-13d0-471e-afcc-8f011e545665"
                 }
             ],
             "programmingLanguage": {
@@ -118,105 +118,105 @@
             "version": "v1.2"
         },
         {
-            "@id": "#fa691609-0414-4d18-8c8c-c03acd2122c7",
+            "@id": "#dbff4668-4dff-4eea-9e2e-55729d90d0f3",
             "@type": "FormalParameter",
             "additionalType": "File",
             "name": "slide",
             "value": "http://slide-repository:5000/slides/DHT00001-1.mrxs"
         },
         {
-            "@id": "#c3492939-0518-4b42-8d36-9cd18453df71",
+            "@id": "#fbc431d6-d7ec-4177-a7a9-45b502e0f8bd",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "mode",
             "value": "serial"
         },
         {
-            "@id": "#35a6badf-9b9b-4057-8288-6114ab20c324",
+            "@id": "#2e116ef6-0887-4a29-a1cc-ab08606bcf35",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tissue-low-level",
             "value": 9
         },
         {
-            "@id": "#f72c0eb3-f939-44c9-9363-370063fd19de",
+            "@id": "#67b1e67a-888d-4d23-91a8-863f11ac70fe",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tissue-low-label",
             "value": "tissue_low"
         },
         {
-            "@id": "#32137991-adfb-4928-a29f-1365e62b8200",
+            "@id": "#4e520101-54e3-48cf-bcb1-f0114d7a18f7",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tissue-high-level",
             "value": 8
         },
         {
-            "@id": "#0425e87e-4ce0-40c9-89fe-eeefa1ccca7b",
+            "@id": "#40a102ad-1749-4542-868f-d1b1353e478f",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tissue-low-chunk",
             "value": 256
         },
         {
-            "@id": "#f6c0b15a-85d6-4586-a5c5-fab304c31d2b",
+            "@id": "#3fe70f9b-c167-40ac-af72-7d572f2c1100",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tissue-high-label",
             "value": "tissue_high"
         },
         {
-            "@id": "#c49ad18c-f656-442c-926c-1a494c31300f",
+            "@id": "#4c720536-10cb-4fab-80e1-84c27009b346",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tissue-high-filter",
             "value": "tissue_low>1"
         },
         {
-            "@id": "#48c6ba00-0192-4f46-b357-04e4bb2de9eb",
+            "@id": "#ec05755a-c046-4385-9991-3fb219d55654",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tissue-high-chunk",
             "value": 1536
         },
         {
-            "@id": "#bbf5fb97-1287-4189-bd49-c71fd51796f1",
+            "@id": "#acf5ed12-0236-4684-990d-bab67fbb3301",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tumor-chunk",
             "value": 1536
         },
         {
-            "@id": "#a0a6ef94-d54d-4a72-8098-c4280753ab8b",
+            "@id": "#c5c47e8d-0385-4a33-ae4c-e6b79d993856",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "gpu",
             "value": 0
         },
         {
-            "@id": "#36e6fcc6-f4a5-4709-99ab-0dafb8b05c61",
+            "@id": "#fe7ac610-f125-4b06-af61-281d82743971",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tumor-level",
             "value": 1
         },
         {
-            "@id": "#46ffd3ef-318a-4a9c-ac4b-d938195d781d",
+            "@id": "#75dd352a-6094-4db9-8a3e-903944c644e6",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tumor-label",
             "value": "tumor"
         },
         {
-            "@id": "#a8da2a6b-6d5b-457d-9b9f-a0a940b52bc3",
+            "@id": "#b35fc14c-e665-45c2-9979-77959fd039df",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tumor-filter",
             "value": "tissue_low>1"
         },
         {
-            "@id": "#1e2b5a3e-8128-4b82-8660-a7fd84ae6d38",
+            "@id": "#5dc75cc6-1ca0-4b3c-bbc0-5cbee2bd5440",
             "@type": "FormalParameter",
             "additionalType": "File",
             "name": "tissue",
@@ -228,7 +228,7 @@
             "contentSize": 4099
         },
         {
-            "@id": "#5c56d714-1512-4190-97bd-fcbdeb4c3fe3",
+            "@id": "#57a0ae2b-13d0-471e-afcc-8f011e545665",
             "@type": "FormalParameter",
             "additionalType": "File",
             "name": "tumor",
@@ -238,6 +238,68 @@
             "@id": "tumor.zip",
             "@type": "File",
             "contentSize": 70100
+        },
+        {
+            "@id": "#ddc1a4ae-4833-4302-aa1a-a56ccfc0e4ab",
+            "@type": "CreateAction",
+            "endTime": "2021-06-29T16:09:45.814390+00:00",
+            "instrument": {
+                "@id": "predictions.cwl"
+            },
+            "name": "Promort prediction run on 2021-06-29T16:07:14.873427+00:00",
+            "object": [
+                {
+                    "@id": "#dbff4668-4dff-4eea-9e2e-55729d90d0f3"
+                },
+                {
+                    "@id": "#fbc431d6-d7ec-4177-a7a9-45b502e0f8bd"
+                },
+                {
+                    "@id": "#2e116ef6-0887-4a29-a1cc-ab08606bcf35"
+                },
+                {
+                    "@id": "#67b1e67a-888d-4d23-91a8-863f11ac70fe"
+                },
+                {
+                    "@id": "#4e520101-54e3-48cf-bcb1-f0114d7a18f7"
+                },
+                {
+                    "@id": "#40a102ad-1749-4542-868f-d1b1353e478f"
+                },
+                {
+                    "@id": "#3fe70f9b-c167-40ac-af72-7d572f2c1100"
+                },
+                {
+                    "@id": "#4c720536-10cb-4fab-80e1-84c27009b346"
+                },
+                {
+                    "@id": "#ec05755a-c046-4385-9991-3fb219d55654"
+                },
+                {
+                    "@id": "#acf5ed12-0236-4684-990d-bab67fbb3301"
+                },
+                {
+                    "@id": "#c5c47e8d-0385-4a33-ae4c-e6b79d993856"
+                },
+                {
+                    "@id": "#fe7ac610-f125-4b06-af61-281d82743971"
+                },
+                {
+                    "@id": "#75dd352a-6094-4db9-8a3e-903944c644e6"
+                },
+                {
+                    "@id": "#b35fc14c-e665-45c2-9979-77959fd039df"
+                }
+            ],
+            "result": [
+                {
+                    "@id": "#5dc75cc6-1ca0-4b3c-bbc0-5cbee2bd5440"
+                },
+                {
+                    "@id": "#57a0ae2b-13d0-471e-afcc-8f011e545665"
+                }
+            ],
+            "startTime": "2021-06-29T16:07:14.873427+00:00"
         }
     ]
 }
