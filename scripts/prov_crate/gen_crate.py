@@ -49,12 +49,17 @@ WORKFLOW_URL = "https://github.com/crs4/deephealth-pipelines"
 WORKFLOW_LICENSE = "MIT"
 TYPE_MAP = {
     "string": "Text",
-    "int": "Number",
-    "long": "Number",
-    "float": "Number",
-    "double": "Number",
+    "int": "Integer",
+    "long": "Integer",
+    "float": "Float",
+    "double": "Float",
+    "Any": "Thing",
+    "boolean": "Boolean",
     "File": "File",
+    "Directory": "Dataset",
 }
+MIRAX_URL = "https://openslide.org/formats/mirax/"
+ZARR_URL = "https://zarr.readthedocs.io/en/stable/spec/v2.html"
 
 
 def get_metadata(source):
@@ -90,6 +95,63 @@ def get_param_types(params, wf_def):
     return rval
 
 
+def add_action(crate, metadata):
+    start_date = metadata["start_date"].isoformat()
+    end_date = metadata["end_date"].isoformat()
+    workflow = crate.mainEntity
+    properties = {
+        "@type": "CreateAction",
+        "name": f"Promort prediction run on {start_date}",
+        "startTime": start_date,
+        "endTime": end_date,
+    }
+    action = crate.add(ContextEntity(crate, properties=properties))
+    action["instrument"] = workflow
+    return action
+
+
+def add_params(params, param_types, metadata, source, crate, action):
+    workflow = crate.mainEntity
+    inputs, outputs, objects, results = [], [], [], []
+    for k, v in params.items():
+        add_type = MIRAX_URL if k == "slide" else param_types[k]
+        in_ = crate.add(ContextEntity(crate, f"#param-{k}", properties={
+            "@type": "FormalParameter",
+            "name": k,
+            "additionalType": add_type,
+        }))
+        inputs.append(in_)
+        if isinstance(v, dict) and v.get("class") == "File":
+            obj = crate.add_file(v["path"])
+        else:
+            obj = crate.add(ContextEntity(crate, f"#pv-{k}", properties={
+                "@type": "PropertyValue",
+                "additionalType": add_type,
+                "name": k,
+                "value": v,
+            }))
+        objects.append(obj)
+    workflow["input"] = inputs
+    action["object"] = objects
+    for k, v in metadata["outs"].items():
+        assert v["class"] == "File"
+        assert k not in params  # so that IDs are unique
+        out = crate.add(ContextEntity(crate, f"#param-{k}", properties={
+            "@type": "FormalParameter",
+            "name": k,
+            "additionalType": ZARR_URL,
+        }))
+        outputs.append(out)
+        path = source / v["location"]
+        assert path.is_file()
+        res = crate.add_file(path, v["location"], properties={
+            "contentSize": v["size"],
+        })
+        results.append(res)
+    workflow["output"] = outputs
+    action["result"] = results
+
+
 def make_crate(source, out_dir):
     metadata = get_metadata(source)
     workflow_path = source / metadata["workflow"]
@@ -104,40 +166,10 @@ def make_crate(source, out_dir):
     workflow["url"] = crate.root_dataset["isBasedOn"] = WORKFLOW_URL
     crate.root_dataset["license"] = WORKFLOW_LICENSE
     # No README.md for now
+    action = add_action(crate, metadata)
     params = get_params(source, metadata)
     param_types = get_param_types(params, wf_def)
-    inputs = []
-    for k, v in params.items():
-        properties = {
-            "@type": "FormalParameter",
-            "name": k,
-            "additionalType": param_types[k],
-            "value": v,
-        }
-        ce = ContextEntity(crate, properties=properties)
-        crate.add(ce)
-        inputs.append(ce)
-    workflow["input"] = inputs
-    outputs = []
-    for k, v in metadata["outs"].items():
-        assert v["class"] == "File"
-        properties = {
-            "@type": "FormalParameter",
-            "name": k,
-            "additionalType": "File",
-            "value": v["location"],
-        }
-        ce = ContextEntity(crate, properties=properties)
-        crate.add(ce)
-        outputs.append(ce)
-        path = source / v["location"]
-        assert path.is_file()
-        properties = {
-            "contentSize": v["size"],
-        }
-        crate.add_file(path, v["location"], properties=properties)
-    workflow["output"] = outputs
-    # TODO: store start_date and end_date somewhere
+    add_params(params, param_types, metadata, source, crate, action)
     crate.write(out_dir)
 
 
