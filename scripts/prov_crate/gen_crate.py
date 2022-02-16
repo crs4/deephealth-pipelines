@@ -49,12 +49,17 @@ WORKFLOW_URL = "https://github.com/crs4/deephealth-pipelines"
 WORKFLOW_LICENSE = "MIT"
 TYPE_MAP = {
     "string": "Text",
-    "int": "Number",
-    "long": "Number",
-    "float": "Number",
-    "double": "Number",
+    "int": "Integer",
+    "long": "Integer",
+    "float": "Float",
+    "double": "Float",
+    "Any": "Thing",
+    "boolean": "Boolean",
     "File": "File",
+    "Directory": "Dataset",
 }
+MIRAX_URL = "https://openslide.org/formats/mirax/"
+ZARR_URL = "https://zarr.readthedocs.io/en/stable/spec/v2.html"
 
 
 def get_metadata(source):
@@ -109,10 +114,11 @@ def add_params(params, param_types, metadata, source, crate, action):
     workflow = crate.mainEntity
     inputs, outputs, objects, results = [], [], [], []
     for k, v in params.items():
+        add_type = MIRAX_URL if k == "slide" else param_types[k]
         in_ = crate.add(ContextEntity(crate, f"#param-{k}", properties={
             "@type": "FormalParameter",
             "name": k,
-            "additionalType": param_types[k],
+            "additionalType": add_type,
         }))
         inputs.append(in_)
         if isinstance(v, dict) and v.get("class") == "File":
@@ -120,7 +126,7 @@ def add_params(params, param_types, metadata, source, crate, action):
         else:
             obj = crate.add(ContextEntity(crate, f"#pv-{k}", properties={
                 "@type": "PropertyValue",
-                "additionalType": param_types[k],
+                "additionalType": add_type,
                 "name": k,
                 "value": v,
             }))
@@ -133,7 +139,7 @@ def add_params(params, param_types, metadata, source, crate, action):
         out = crate.add(ContextEntity(crate, f"#param-{k}", properties={
             "@type": "FormalParameter",
             "name": k,
-            "additionalType": "File",
+            "additionalType": ZARR_URL,
         }))
         outputs.append(out)
         path = source / v["location"]

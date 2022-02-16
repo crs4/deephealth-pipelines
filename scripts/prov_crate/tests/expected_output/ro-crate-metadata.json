@@ -4,7 +4,7 @@
         {
             "@id": "./",
             "@type": "Dataset",
-            "datePublished": "2022-02-16T10:47:17+00:00",
+            "datePublished": "2022-02-16T11:07:48+00:00",
             "hasPart": [
                 {
                     "@id": "predictions.cwl"
@@ -118,7 +118,7 @@
             "version": "v1.2"
         },
         {
-            "@id": "#635a03f9-1c5a-4aaf-8d20-b8c7e2c50dd6",
+            "@id": "#0762bd43-6703-4255-ab0a-c85435039a42",
             "@type": "CreateAction",
             "endTime": "2021-06-29T16:09:45.814390+00:00",
             "instrument": {
@@ -182,13 +182,13 @@
         {
             "@id": "#param-slide",
             "@type": "FormalParameter",
-            "additionalType": "File",
+            "additionalType": "https://openslide.org/formats/mirax/",
             "name": "slide"
         },
         {
             "@id": "#pv-slide",
             "@type": "PropertyValue",
-            "additionalType": "File",
+            "additionalType": "https://openslide.org/formats/mirax/",
             "name": "slide",
             "value": "http://slide-repository:5000/slides/DHT00001-1.mrxs"
         },
@@ -208,13 +208,13 @@
         {
             "@id": "#param-tissue-low-level",
             "@type": "FormalParameter",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "tissue-low-level"
         },
         {
             "@id": "#pv-tissue-low-level",
             "@type": "PropertyValue",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "tissue-low-level",
             "value": 9
         },
@@ -234,26 +234,26 @@
         {
             "@id": "#param-tissue-high-level",
             "@type": "FormalParameter",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "tissue-high-level"
         },
         {
             "@id": "#pv-tissue-high-level",
             "@type": "PropertyValue",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "tissue-high-level",
             "value": 8
         },
         {
             "@id": "#param-tissue-low-chunk",
             "@type": "FormalParameter",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "tissue-low-chunk"
         },
         {
             "@id": "#pv-tissue-low-chunk",
             "@type": "PropertyValue",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "tissue-low-chunk",
             "value": 256
         },
@@ -286,52 +286,52 @@
         {
             "@id": "#param-tissue-high-chunk",
             "@type": "FormalParameter",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "tissue-high-chunk"
         },
         {
             "@id": "#pv-tissue-high-chunk",
             "@type": "PropertyValue",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "tissue-high-chunk",
             "value": 1536
         },
         {
             "@id": "#param-tumor-chunk",
             "@type": "FormalParameter",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "tumor-chunk"
         },
         {
             "@id": "#pv-tumor-chunk",
             "@type": "PropertyValue",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "tumor-chunk",
             "value": 1536
         },
         {
             "@id": "#param-gpu",
             "@type": "FormalParameter",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "gpu"
         },
         {
             "@id": "#pv-gpu",
             "@type": "PropertyValue",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "gpu",
             "value": 0
         },
         {
             "@id": "#param-tumor-level",
             "@type": "FormalParameter",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "tumor-level"
         },
         {
             "@id": "#pv-tumor-level",
             "@type": "PropertyValue",
-            "additionalType": "Number",
+            "additionalType": "Integer",
             "name": "tumor-level",
             "value": 1
         },
@@ -364,7 +364,7 @@
         {
             "@id": "#param-tissue",
             "@type": "FormalParameter",
-            "additionalType": "File",
+            "additionalType": "https://zarr.readthedocs.io/en/stable/spec/v2.html",
             "name": "tissue"
         },
         {
@@ -375,7 +375,7 @@
         {
             "@id": "#param-tumor",
             "@type": "FormalParameter",
-            "additionalType": "File",
+            "additionalType": "https://zarr.readthedocs.io/en/stable/spec/v2.html",
             "name": "tumor"
         },
         {
