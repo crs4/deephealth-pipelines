@@ -5,23 +5,22 @@ inputs:
   slide: File
   tissue-low-level: int
   tissue-low-label: string
-  tissue-low-chunk: int?
-  tissue-low-batch: int?
+  tissue-low-chunk-size: int?
+  tissue-low-batch-size: int?
 
   tissue-high-level: int
   tissue-high-label: string
   tissue-high-filter: string
-  tissue-high-chunk: int?
-  tissue-high-batch: int?
+  tissue-high-chunk-size: int?
+  tissue-high-batch-size: int?
 
-  tumor-chunk: int?
+  tumor-chunk-size: int?
   tumor-level: int
   tumor-label: string
   tumor-filter: string
-  tumor-batch: int?
+  tumor-batch-size: int?
 
   gpu: int?
-  mode: string?
 
 outputs:
   tissue:
@@ -39,7 +38,7 @@ steps:
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: mdrio/slaid:0.65.0-beta.8-tissue_model-eddl_2-gpu
+          dockerPull: mdrio/slaid:1.0.0-beta.12-tissue_model-eddl_2-cudnn
 
         InitialWorkDirRequirement:
           listing:
@@ -68,7 +67,7 @@ steps:
         label:
           type: string
           inputBinding:
-            prefix: -f
+            prefix: -L
         filter_slide:
           type: File?
           inputBinding:
@@ -81,20 +80,12 @@ steps:
           type: int?
           inputBinding:
             prefix: --gpu
-        chunk:
+        chunk-size:
           type: int?
-          inputBinding:
-            prefix: --chunk
-        batch:
+        batch-size:
           type: int?
-          inputBinding:
-            prefix: --batch
-        mode:
-          type: string?
-          inputBinding:
-            prefix: --mode
 
-      arguments: ["-o", $(runtime.outdir), '--writer', 'zip']
+      arguments: ["fixed-batch","-o", $(runtime.outdir), '--writer', 'zip']
       outputs:
         tissue:
           type: File
@@ -107,9 +98,8 @@ steps:
       level: tissue-low-level
       label: tissue-low-label
       gpu: gpu
-      chunk: tissue-low-chunk
-      batch: tissue-low-batch
-      mode: mode
+      chunk-size: tissue-low-chunk-size
+      batch-size: tissue-low-batch-size
     out: [tissue]
 
   extract-tissue-high:
@@ -121,9 +111,8 @@ steps:
       filter_slide: extract-tissue-low/tissue
       filter: tissue-high-filter
       gpu: gpu
-      chunk: tissue-high-chunk
-      batch: tissue-high-batch
-      mode: mode
+      chunk: tissue-high-chunk-size
+      batch: tissue-high-batch-size
     out: [tissue]
 
 
@@ -134,7 +123,7 @@ steps:
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: mdrio/slaid:0.65.0-beta.8-tumor_model-level_1-gpu
+          dockerPull: mdrio/slaid:1.0.0-beta.12-tumor_model-level_1-cudnn
         InitialWorkDirRequirement:
           listing:
             -  $(inputs.src)
@@ -163,7 +152,7 @@ steps:
         label:
           type: string
           inputBinding:
-            prefix: -f
+            prefix: -L
         filter_slide:
           type: File?
           inputBinding:
@@ -176,20 +165,12 @@ steps:
           type: int?
           inputBinding:
             prefix: --gpu
-        chunk:
+        chunk-size:
           type: int?
-          inputBinding:
-            prefix: --chunk
-        batch:
+        batch-size:
           type: int?
-          inputBinding:
-            prefix: --batch
-        mode:
-          type: string?
-          inputBinding:
-            prefix: --mode
 
-      arguments: ["-o", $(runtime.outdir), '--writer', 'zip']
+      arguments: ["fixed-batch","-o", $(runtime.outdir), '--writer', 'zip']
       outputs:
         tumor:
           type: File
@@ -203,8 +184,7 @@ steps:
       filter_slide: extract-tissue-low/tissue
       filter: tumor-filter
       gpu: gpu
-      chunk: tumor-chunk
-      batch: tumor-batch
-      mode: mode
+      chunk-size: tumor-chunk-size
+      batch-size: tumor-batch-size
     out:
       [tumor]
