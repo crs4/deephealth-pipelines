@@ -109,7 +109,7 @@ def add_params(params, param_types, metadata, source, crate, action):
     workflow = crate.mainEntity
     inputs, outputs, objects, results = [], [], [], []
     for k, v in params.items():
-        in_ = crate.add(ContextEntity(crate, properties={
+        in_ = crate.add(ContextEntity(crate, f"#param-{k}", properties={
             "@type": "FormalParameter",
             "name": k,
             "additionalType": param_types[k],
@@ -118,7 +118,7 @@ def add_params(params, param_types, metadata, source, crate, action):
         if isinstance(v, dict) and v.get("class") == "File":
             obj = crate.add_file(v["path"])
         else:
-            obj = crate.add(ContextEntity(crate, properties={
+            obj = crate.add(ContextEntity(crate, f"#pv-{k}", properties={
                 "@type": "PropertyValue",
                 "additionalType": param_types[k],
                 "name": k,
@@ -129,7 +129,8 @@ def add_params(params, param_types, metadata, source, crate, action):
     action["object"] = objects
     for k, v in metadata["outs"].items():
         assert v["class"] == "File"
-        out = crate.add(ContextEntity(crate, properties={
+        assert k not in params  # so that IDs are unique
+        out = crate.add(ContextEntity(crate, f"#param-{k}", properties={
             "@type": "FormalParameter",
             "name": k,
             "additionalType": "File",

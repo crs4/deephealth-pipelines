@@ -4,7 +4,7 @@
         {
             "@id": "./",
             "@type": "Dataset",
-            "datePublished": "2022-02-15T16:41:01+00:00",
+            "datePublished": "2022-02-16T10:47:17+00:00",
             "hasPart": [
                 {
                     "@id": "predictions.cwl"
@@ -47,55 +47,55 @@
             ],
             "input": [
                 {
-                    "@id": "#780aa526-eeb4-4d3b-ad8b-14da682f80af"
+                    "@id": "#param-slide"
                 },
                 {
-                    "@id": "#a29f0b1b-15a3-4976-818f-fa83a6c46b9a"
+                    "@id": "#param-mode"
                 },
                 {
-                    "@id": "#18f6d669-91ca-4f09-a053-205a65d4a4e9"
+                    "@id": "#param-tissue-low-level"
                 },
                 {
-                    "@id": "#0a43ee42-b2ff-408e-8cf5-20dce6f8f3af"
+                    "@id": "#param-tissue-low-label"
                 },
                 {
-                    "@id": "#80cbf6a2-64f9-4d62-be4e-1592760d1a1c"
+                    "@id": "#param-tissue-high-level"
                 },
                 {
-                    "@id": "#1880b103-7477-4e60-999a-c83923dc17f7"
+                    "@id": "#param-tissue-low-chunk"
                 },
                 {
-                    "@id": "#d93f438e-7214-4c80-ba21-3244d6de30c4"
+                    "@id": "#param-tissue-high-label"
                 },
                 {
-                    "@id": "#777955e6-1301-4652-aac7-f8acf65e51e0"
+                    "@id": "#param-tissue-high-filter"
                 },
                 {
-                    "@id": "#d1585ffa-f5db-4ae1-980f-389504ad60fe"
+                    "@id": "#param-tissue-high-chunk"
                 },
                 {
-                    "@id": "#50c4d970-3a82-41eb-8e02-22c5831fc882"
+                    "@id": "#param-tumor-chunk"
                 },
                 {
-                    "@id": "#160c9d45-6cc3-4d46-ba62-a2bf033ff67e"
+                    "@id": "#param-gpu"
                 },
                 {
-                    "@id": "#ba92690c-9abf-4384-a2a7-07be0107dbcb"
+                    "@id": "#param-tumor-level"
                 },
                 {
-                    "@id": "#4719501a-2a3d-47c9-9b37-eb21bc637e88"
+                    "@id": "#param-tumor-label"
                 },
                 {
-                    "@id": "#215ab585-6fae-4df0-bea1-f7c9dcd25d94"
+                    "@id": "#param-tumor-filter"
                 }
             ],
             "name": "Promort tissue and tumor prediction",
             "output": [
                 {
-                    "@id": "#b192cffb-6938-4efa-afad-fc364a38089e"
+                    "@id": "#param-tissue"
                 },
                 {
-                    "@id": "#a9de171d-411f-437c-8b59-1f6ede53361e"
+                    "@id": "#param-tumor"
                 }
             ],
             "programmingLanguage": {
@@ -118,7 +118,7 @@
             "version": "v1.2"
         },
         {
-            "@id": "#4c2af0c7-3104-4ebe-8138-91066f4a965c",
+            "@id": "#635a03f9-1c5a-4aaf-8d20-b8c7e2c50dd6",
             "@type": "CreateAction",
             "endTime": "2021-06-29T16:09:45.814390+00:00",
             "instrument": {
@@ -127,46 +127,46 @@
             "name": "Promort prediction run on 2021-06-29T16:07:14.873427+00:00",
             "object": [
                 {
-                    "@id": "#e7863b44-bb14-4e45-bb2d-cd6d7a17d8dc"
+                    "@id": "#pv-slide"
                 },
                 {
-                    "@id": "#6d7f2769-9175-4ccc-87c6-de1b996235c6"
+                    "@id": "#pv-mode"
                 },
                 {
-                    "@id": "#5743d24f-e570-48e5-a135-a4d405743daa"
+                    "@id": "#pv-tissue-low-level"
                 },
                 {
-                    "@id": "#73bec44c-7e7e-4ae6-8983-be0d08a8e658"
+                    "@id": "#pv-tissue-low-label"
                 },
                 {
-                    "@id": "#0bab8d3d-8f47-4ef8-9892-5856abac2cbf"
+                    "@id": "#pv-tissue-high-level"
                 },
                 {
-                    "@id": "#7a903041-7711-4eef-9bae-20b1199e348e"
+                    "@id": "#pv-tissue-low-chunk"
                 },
                 {
-                    "@id": "#9680509a-1362-4cb8-abaa-c2ca8a55d775"
+                    "@id": "#pv-tissue-high-label"
                 },
                 {
-                    "@id": "#b86d6209-2be6-4912-83f9-bdc07b303e66"
+                    "@id": "#pv-tissue-high-filter"
                 },
                 {
-                    "@id": "#b2316942-6fc3-4950-bbcf-04c8bcb51ae2"
+                    "@id": "#pv-tissue-high-chunk"
                 },
                 {
-                    "@id": "#3d9580a3-5f6d-425d-a1ba-e566d2f9e6f7"
+                    "@id": "#pv-tumor-chunk"
                 },
                 {
-                    "@id": "#ce94ae6d-c5dc-4e88-b008-855dc0287de5"
+                    "@id": "#pv-gpu"
                 },
                 {
-                    "@id": "#5234adbf-1dc2-44d6-a978-4e332ed1a93f"
+                    "@id": "#pv-tumor-level"
                 },
                 {
-                    "@id": "#6968a1c2-5364-4ad9-9379-edf90f557520"
+                    "@id": "#pv-tumor-label"
                 },
                 {
-                    "@id": "#207fc4b4-a11e-42a4-bc49-92a668c9038f"
+                    "@id": "#pv-tumor-filter"
                 }
             ],
             "result": [
@@ -180,189 +180,189 @@
             "startTime": "2021-06-29T16:07:14.873427+00:00"
         },
         {
-            "@id": "#780aa526-eeb4-4d3b-ad8b-14da682f80af",
+            "@id": "#param-slide",
             "@type": "FormalParameter",
             "additionalType": "File",
             "name": "slide"
         },
         {
-            "@id": "#e7863b44-bb14-4e45-bb2d-cd6d7a17d8dc",
+            "@id": "#pv-slide",
             "@type": "PropertyValue",
             "additionalType": "File",
             "name": "slide",
             "value": "http://slide-repository:5000/slides/DHT00001-1.mrxs"
         },
         {
-            "@id": "#a29f0b1b-15a3-4976-818f-fa83a6c46b9a",
+            "@id": "#param-mode",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "mode"
         },
         {
-            "@id": "#6d7f2769-9175-4ccc-87c6-de1b996235c6",
+            "@id": "#pv-mode",
             "@type": "PropertyValue",
             "additionalType": "Text",
             "name": "mode",
             "value": "serial"
         },
         {
-            "@id": "#18f6d669-91ca-4f09-a053-205a65d4a4e9",
+            "@id": "#param-tissue-low-level",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tissue-low-level"
         },
         {
-            "@id": "#5743d24f-e570-48e5-a135-a4d405743daa",
+            "@id": "#pv-tissue-low-level",
             "@type": "PropertyValue",
             "additionalType": "Number",
             "name": "tissue-low-level",
             "value": 9
         },
         {
-            "@id": "#0a43ee42-b2ff-408e-8cf5-20dce6f8f3af",
+            "@id": "#param-tissue-low-label",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tissue-low-label"
         },
         {
-            "@id": "#73bec44c-7e7e-4ae6-8983-be0d08a8e658",
+            "@id": "#pv-tissue-low-label",
             "@type": "PropertyValue",
             "additionalType": "Text",
             "name": "tissue-low-label",
             "value": "tissue_low"
         },
         {
-            "@id": "#80cbf6a2-64f9-4d62-be4e-1592760d1a1c",
+            "@id": "#param-tissue-high-level",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tissue-high-level"
         },
         {
-            "@id": "#0bab8d3d-8f47-4ef8-9892-5856abac2cbf",
+            "@id": "#pv-tissue-high-level",
             "@type": "PropertyValue",
             "additionalType": "Number",
             "name": "tissue-high-level",
             "value": 8
         },
         {
-            "@id": "#1880b103-7477-4e60-999a-c83923dc17f7",
+            "@id": "#param-tissue-low-chunk",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tissue-low-chunk"
         },
         {
-            "@id": "#7a903041-7711-4eef-9bae-20b1199e348e",
+            "@id": "#pv-tissue-low-chunk",
             "@type": "PropertyValue",
             "additionalType": "Number",
             "name": "tissue-low-chunk",
             "value": 256
         },
         {
-            "@id": "#d93f438e-7214-4c80-ba21-3244d6de30c4",
+            "@id": "#param-tissue-high-label",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tissue-high-label"
         },
         {
-            "@id": "#9680509a-1362-4cb8-abaa-c2ca8a55d775",
+            "@id": "#pv-tissue-high-label",
             "@type": "PropertyValue",
             "additionalType": "Text",
             "name": "tissue-high-label",
             "value": "tissue_high"
         },
         {
-            "@id": "#777955e6-1301-4652-aac7-f8acf65e51e0",
+            "@id": "#param-tissue-high-filter",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tissue-high-filter"
         },
         {
-            "@id": "#b86d6209-2be6-4912-83f9-bdc07b303e66",
+            "@id": "#pv-tissue-high-filter",
             "@type": "PropertyValue",
             "additionalType": "Text",
             "name": "tissue-high-filter",
             "value": "tissue_low>1"
         },
         {
-            "@id": "#d1585ffa-f5db-4ae1-980f-389504ad60fe",
+            "@id": "#param-tissue-high-chunk",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tissue-high-chunk"
         },
         {
-            "@id": "#b2316942-6fc3-4950-bbcf-04c8bcb51ae2",
+            "@id": "#pv-tissue-high-chunk",
             "@type": "PropertyValue",
             "additionalType": "Number",
             "name": "tissue-high-chunk",
             "value": 1536
         },
         {
-            "@id": "#50c4d970-3a82-41eb-8e02-22c5831fc882",
+            "@id": "#param-tumor-chunk",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tumor-chunk"
         },
         {
-            "@id": "#3d9580a3-5f6d-425d-a1ba-e566d2f9e6f7",
+            "@id": "#pv-tumor-chunk",
             "@type": "PropertyValue",
             "additionalType": "Number",
             "name": "tumor-chunk",
             "value": 1536
         },
         {
-            "@id": "#160c9d45-6cc3-4d46-ba62-a2bf033ff67e",
+            "@id": "#param-gpu",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "gpu"
         },
         {
-            "@id": "#ce94ae6d-c5dc-4e88-b008-855dc0287de5",
+            "@id": "#pv-gpu",
             "@type": "PropertyValue",
             "additionalType": "Number",
             "name": "gpu",
             "value": 0
         },
         {
-            "@id": "#ba92690c-9abf-4384-a2a7-07be0107dbcb",
+            "@id": "#param-tumor-level",
             "@type": "FormalParameter",
             "additionalType": "Number",
             "name": "tumor-level"
         },
         {
-            "@id": "#5234adbf-1dc2-44d6-a978-4e332ed1a93f",
+            "@id": "#pv-tumor-level",
             "@type": "PropertyValue",
             "additionalType": "Number",
             "name": "tumor-level",
             "value": 1
         },
         {
-            "@id": "#4719501a-2a3d-47c9-9b37-eb21bc637e88",
+            "@id": "#param-tumor-label",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tumor-label"
         },
         {
-            "@id": "#6968a1c2-5364-4ad9-9379-edf90f557520",
+            "@id": "#pv-tumor-label",
             "@type": "PropertyValue",
             "additionalType": "Text",
             "name": "tumor-label",
             "value": "tumor"
         },
         {
-            "@id": "#215ab585-6fae-4df0-bea1-f7c9dcd25d94",
+            "@id": "#param-tumor-filter",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tumor-filter"
         },
         {
-            "@id": "#207fc4b4-a11e-42a4-bc49-92a668c9038f",
+            "@id": "#pv-tumor-filter",
             "@type": "PropertyValue",
             "additionalType": "Text",
             "name": "tumor-filter",
             "value": "tissue_low>1"
         },
         {
-            "@id": "#b192cffb-6938-4efa-afad-fc364a38089e",
+            "@id": "#param-tissue",
             "@type": "FormalParameter",
             "additionalType": "File",
             "name": "tissue"
@@ -373,7 +373,7 @@
             "contentSize": 4099
         },
         {
-            "@id": "#a9de171d-411f-437c-8b59-1f6ede53361e",
+            "@id": "#param-tumor",
             "@type": "FormalParameter",
             "additionalType": "File",
             "name": "tumor"
