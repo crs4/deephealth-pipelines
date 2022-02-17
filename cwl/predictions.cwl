@@ -38,7 +38,7 @@ steps:
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: mdrio/slaid:1.0.0-beta.12-tissue_model-eddl_2-cudnn
+          dockerPull: mdrio/slaid:1.0.0-beta.13-tissue_model-eddl_2-cudnn
 
         InitialWorkDirRequirement:
           listing:
@@ -123,7 +123,7 @@ steps:
       requirements:
         InlineJavascriptRequirement: {}
         DockerRequirement:
-          dockerPull: mdrio/slaid:1.0.0-beta.12-tumor_model-level_1-cudnn
+          dockerPull: mdrio/slaid:1.0.0-beta.13-tumor_model-level_1-cudnn
         InitialWorkDirRequirement:
           listing:
             -  $(inputs.src)
