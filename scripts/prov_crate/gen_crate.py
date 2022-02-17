@@ -176,6 +176,7 @@ def make_crate(source, out_dir):
     params = get_params(source, metadata)
     param_types = get_param_types(params, wf_def)
     add_params(params, param_types, metadata, source, crate, action)
+    crate.root_dataset["mentions"] = [action]
     crate.write(out_dir)
 
 
