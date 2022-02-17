@@ -45,7 +45,7 @@ services:
       - ome-server-var:/opt/omero/server/OMERO.server/var
 
   omeseadragon:
-    image: crs4/ome_seadragon-web:0.8.2-ome5.11
+    image: crs4/ome_seadragon-web:0.8.3-ome5.11
     depends_on:
       - omero-server
       - redis-server
@@ -75,7 +75,7 @@ services:
 
   omeseadragon-nginx:
     # build: /opt/git/ome_seadragon-nginx-docker
-    image: crs4/ome_seadragon-nginx:0.8.2-ome5.11
+    image: crs4/ome_seadragon-nginx:0.8.3-ome5.11
     depends_on:
       - omeseadragon
     entrypoint: ['/usr/local/bin/wait-for-it.sh', 'omeseadragon:4080', '--timeout=600', '--strict', '--',
