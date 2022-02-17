@@ -72,9 +72,6 @@ def get_params(source, metadata):
     params_path = source / metadata["params"]
     with open(params_path) as f:
         params = json.load(f)
-    for k, v in params.items():
-        if isinstance(v, dict) and v.get("class") == "File":
-            params[k] = v["path"]
     return params
 
 
@@ -122,7 +119,12 @@ def add_params(params, param_types, metadata, source, crate, action):
         }))
         inputs.append(in_)
         if isinstance(v, dict) and v.get("class") == "File":
-            obj = crate.add_file(v["path"])
+            obj = crate.add_file(
+                v["path"],
+                fetch_remote=False,
+                validate_url=False,
+                properties={"name": k, "additionalType": add_type}
+            )
         else:
             obj = crate.add(ContextEntity(crate, f"#pv-{k}", properties={
                 "@type": "PropertyValue",
@@ -144,9 +146,13 @@ def add_params(params, param_types, metadata, source, crate, action):
         outputs.append(out)
         path = source / v["location"]
         assert path.is_file()
-        res = crate.add_file(path, v["location"], properties={
-            "contentSize": v["size"],
-        })
+        res = crate.add_file(
+            path,
+            v["location"],
+            fetch_remote=False,
+            validate_url=False,
+            properties={"contentSize": v["size"]}
+        )
         results.append(res)
     workflow["output"] = outputs
     action["result"] = results

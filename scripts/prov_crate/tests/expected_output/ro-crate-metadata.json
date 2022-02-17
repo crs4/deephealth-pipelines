@@ -4,10 +4,13 @@
         {
             "@id": "./",
             "@type": "Dataset",
-            "datePublished": "2022-02-16T11:07:48+00:00",
+            "datePublished": "2022-02-17T11:27:55+00:00",
             "hasPart": [
                 {
                     "@id": "predictions.cwl"
+                },
+                {
+                    "@id": "http://slide-repository:5000/slides/DHT00001-1.mrxs"
                 },
                 {
                     "@id": "tissue_high.zip"
@@ -118,7 +121,7 @@
             "version": "v1.2"
         },
         {
-            "@id": "#0762bd43-6703-4255-ab0a-c85435039a42",
+            "@id": "#18adac67-8db6-476f-acda-026ddf75615b",
             "@type": "CreateAction",
             "endTime": "2021-06-29T16:09:45.814390+00:00",
             "instrument": {
@@ -127,7 +130,7 @@
             "name": "Promort prediction run on 2021-06-29T16:07:14.873427+00:00",
             "object": [
                 {
-                    "@id": "#pv-slide"
+                    "@id": "http://slide-repository:5000/slides/DHT00001-1.mrxs"
                 },
                 {
                     "@id": "#pv-mode"
@@ -186,11 +189,11 @@
             "name": "slide"
         },
         {
-            "@id": "#pv-slide",
-            "@type": "PropertyValue",
+            "@id": "http://slide-repository:5000/slides/DHT00001-1.mrxs",
+            "@type": "File",
             "additionalType": "https://openslide.org/formats/mirax/",
             "name": "slide",
-            "value": "http://slide-repository:5000/slides/DHT00001-1.mrxs"
+            "url": "http://slide-repository:5000/slides/DHT00001-1.mrxs"
         },
         {
             "@id": "#param-mode",
