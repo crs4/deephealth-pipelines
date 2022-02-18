@@ -228,7 +228,11 @@ def add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
 
 
 def add_prediction_to_promort(
-    prediction, slide_label: str, prediction_label: str, omero_id: str
+    prediction,
+    slide_label: str,
+    prediction_label: str,
+    omero_id: str,
+    review_required: bool = False,
 ) -> str:
 
     command = [
@@ -252,6 +256,8 @@ def add_prediction_to_promort(
         "--omero-id",
         omero_id,
     ]
+    if review_required:
+        command.append("--review-required")
 
     logger.info("command %s", command)
     res = docker_run(command, DOCKER_NETWORK)
@@ -285,7 +291,13 @@ def tumor_branch(prediction_label, prediction, slide_label):
     register_to_promort = task(
         add_prediction_to_promort,
         task_id=f"add_{prediction.value}.tiledb_to_promort",
-    )(prediction.value, slide_label, f"{prediction_label}.tiledb", omero_id)
+    )(
+        prediction.value,
+        slide_label,
+        f"{prediction_label}.tiledb",
+        omero_id,
+        review_required=True,
+    )
 
     convert_to_tiledb(prediction_label) >> register_to_omero >> register_to_promort
 
