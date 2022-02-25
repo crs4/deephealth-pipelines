@@ -14,34 +14,34 @@ services:
     expose:
       - "8080"
     environment:
-      - VIRTUAL_HOST=${PROJECT}.airflow.dh
+      - VIRTUAL_HOST=${PROJECT}.airflow.local
       - VIRTUAL_PORT=8080
 
   omeseadragon:
     expose:
       - "4080"
     environment:
-      - VIRTUAL_HOST=${PROJECT}.omeseadragon.dh
+      - VIRTUAL_HOST=${PROJECT}.omeseadragon.local
       - VIRTUAL_PORT=4080
 
   omeseadragon-nginx:
     expose:
       - "80"
     environment:
-      - VIRTUAL_HOST=${PROJECT}.omenginx.dh
+      - VIRTUAL_HOST=${PROJECT}.omenginx.local
       - VIRTUAL_PORT=80
 
   promort-web:
     expose:
       - "8080"
     environment:
-      - VIRTUAL_HOST=${PROJECT}.promortweb.dh
+      - VIRTUAL_HOST=${PROJECT}.promortweb.local
       - VIRTUAL_PORT=8080
 
   promort-nginx:
     expose:
       - "80"
     environment:
-      - VIRTUAL_HOST=${PROJECT}.promort.dh
+      - VIRTUAL_HOST=${PROJECT}.promort.local
       - VIRTUAL_PORT=80
      
