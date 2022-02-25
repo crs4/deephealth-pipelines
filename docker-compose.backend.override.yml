@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  omeseadragon:
+    ports:
+      - 4080:4080
+
+  omeseadragon-nginx:
+    ports:
+      - 8090:80
+
+  promort-web:
+    ports:
+      - 8888:8080
+
+  promort-nginx:
+    ports:
+      - 9095:80
+

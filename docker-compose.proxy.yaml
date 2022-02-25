@@ -1,0 +1,47 @@
+version: "3"
+
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    ports:
+      - 8080:80
+    networks:
+      deephealth:
+
+  webserver:
+    expose:
+      - "8080"
+    environment:
+      - VIRTUAL_HOST=${PROJECT}.airflow.dh
+      - VIRTUAL_PORT=8080
+
+  omeseadragon:
+    expose:
+      - "4080"
+    environment:
+      - VIRTUAL_HOST=${PROJECT}.omeseadragon.dh
+      - VIRTUAL_PORT=4080
+
+  omeseadragon-nginx:
+    expose:
+      - "80"
+    environment:
+      - VIRTUAL_HOST=${PROJECT}.omenginx.dh
+      - VIRTUAL_PORT=80
+
+  promort-web:
+    expose:
+      - "8080"
+    environment:
+      - VIRTUAL_HOST=${PROJECT}.promortweb.dh
+      - VIRTUAL_PORT=8080
+
+  promort-nginx:
+    expose:
+      - "80"
+    environment:
+      - VIRTUAL_HOST=${PROJECT}.promort.dh
+      - VIRTUAL_PORT=80
+     
