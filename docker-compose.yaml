@@ -71,6 +71,7 @@ services:
       # privileged: true                                               # maybe I don't actully need it here
       restart: always
       <<: *airflow_env_var
+
       # <<: *airflow_env_file
       command: start_scheduler.sh
       depends_on:
@@ -86,8 +87,6 @@ services:
         context: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
         args: 
           CWL_AIRFLOW_VERSION: *cwl_airflow_branch
-      ports:
-          - ${AIRFLOW_WEBSERVER_PORT}:8080
       <<: *airflow_volumes
       <<: *airflow_env_var
       # <<: *airflow_env_file
@@ -98,32 +97,10 @@ services:
       networks:
         deephealth:
 
-  # starts after scheduler was launched, then waits untill all required for airflow tables have been
-  # created (we just check dag_run table) and starts apiserver
-  # the default API --host 127.0.0.1 won't work from inside the docker container, so we used 0.0.0.0
-  apiserver:
-      # image: mdrio/cwl-airflow-apiserver
-      build: 
-        context: ./build/cwl-airflow/packaging/docker_compose/local_executor/cwl_airflow
-        args: 
-          CWL_AIRFLOW_VERSION: *cwl_airflow_branch
-      ports:
-          - ${CWL_AIRFLOW_API_PORT}:8081
-      <<: *airflow_volumes        
-      <<: *airflow_env_var
-      # <<: *airflow_env_file
-      restart: always
-      command: start_apiserver.sh --replay 60 --host 0.0.0.0
-      depends_on:
-          - scheduler  # need to start only after cwl-airflow init was run
-      networks:
-        deephealth:
 
   # starts MySQL server, creates empty ${MYSQL_DATABASE} with ${MYSQL_USER} and ${MYSQL_PASSWORD}
   mysql:
       image: mysql:5.7
-      ports:
-          - ${MYSQL_PORT}:3306
       volumes:
           - ${MYSQL_DATA}:/var/lib/mysql
           - /dev/urandom:/dev/random  # Not sure if I need it at all

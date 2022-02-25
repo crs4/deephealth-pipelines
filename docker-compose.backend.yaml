@@ -33,9 +33,6 @@ services:
       deephealth:
         aliases:
           - omero-server
-    ports:
-      - "4063:4063"
-      - "4064:4064"
     environment:
       - ROOTPASS=omero
       - CONFIG_omero_db_host=ome-pg-server
@@ -55,8 +52,6 @@ services:
                  '/usr/local/bin/entrypoint.sh']
     networks:
       deephealth:
-    ports:
-      - 4080:4080
     environment:
       - ROOTPASS=omero
       - OMEROHOST=omero-server
@@ -80,11 +75,58 @@ services:
       - omeseadragon
     entrypoint: ['/usr/local/bin/wait-for-it.sh', 'omeseadragon:4080', '--timeout=600', '--strict', '--',
                  '/usr/local/bin/entrypoint.sh']
-    ports:
-      - "8090:80"
     networks:
       deephealth:
     environment:
       - OMEROWEBHOST=omeseadragon
       # - VIRTUAL_HOST=ome-seadragon.mobydick
+
+  promort-db:
+    image: postgres:9.6.12-alpine
+    networks:
+      deephealth:
+        aliases:
+          - promort-db
+    environment:
+      - POSTGRES_DB=${PROMORT_DB}
+      - POSTGRES_USER=${PROMORT_DB_USER}
+      - POSTGRES_PASSWORD=${PROMORT_DB_PASSWORD}
+    volumes:
+      - ./data/promort-pg-data:/var/lib/postgresql/data
+
+  promort-web:
+    image: crs4/promort-web:0.9.3
+    # image: promort-web:dev
+    # build:
+    #   context: ./build/promort
+    #   args:
+    #     PROMORT_REPO: $PROMORT_REPO
+    #     PROMORT_BRANCH: $PROMORT_BRANCH
+    depends_on: 
+      - promort-db
+    entrypoint: ['/usr/local/bin/wait-for-it.sh', 'promort-db:5432', '--',
+                 '/usr/local/bin/entrypoint.sh']
+    networks:
+      deephealth:
+    environment:
+      - DJANGO_CONFIG_FILE=/opt/django/conf/config.yaml
+      - PROMORT_USER=${PROMORT_USER}
+      - PROMORT_PASSWORD=${PROMORT_PASSWORD}
+      - PROMORT_SESSION_ID=${PROMORT_SESSION_ID}
+
+    volumes:
+      - ./promort_config/:/opt/django/conf/
+      - ./scripts/:/scripts/
+      - ./scripts/promort/81_create_user.sh:/startup/81_create_user.sh
+
+  promort-nginx:
+    image: crs4/promort-nginx:0.9.3
+    depends_on:
+      - promort-web
+    entrypoint: ['/usr/local/bin/wait-for-it.sh', 'promort-web:8080', '--timeout=600', '--strict', '--',
+                 '/usr/local/bin/entrypoint.sh']
+    networks:
+      deephealth:
+    environment:
+      - DJANGO_SERVER=promort-web
 
