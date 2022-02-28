@@ -134,6 +134,7 @@ def add_params(params, param_types, metadata, source, crate, action):
                 "name": k,
                 "value": v,
             }))
+        obj["exampleOfWork"] = in_
         objects.append(obj)
     workflow["input"] = inputs
     action["object"] = objects
@@ -156,6 +157,7 @@ def add_params(params, param_types, metadata, source, crate, action):
             validate_url=False,
             properties={"encodingFormat": ZARR_URL, "contentSize": v["size"]}
         )
+        res["exampleOfWork"] = out
         results.append(res)
     workflow["output"] = outputs
     action["result"] = results
