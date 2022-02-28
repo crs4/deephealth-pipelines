@@ -111,24 +111,26 @@ def add_params(params, param_types, metadata, source, crate, action):
     workflow = crate.mainEntity
     inputs, outputs, objects, results = [], [], [], []
     for k, v in params.items():
-        add_type = MIRAX_URL if k == "slide" else param_types[k]
+        add_type = "ImageObject" if k == "slide" else param_types[k]
         in_ = crate.add(ContextEntity(crate, f"#param-{k}", properties={
             "@type": "FormalParameter",
             "name": k,
             "additionalType": add_type,
         }))
+        # does it make sense for non-file params to have an encodingFormat?
+        if k == "slide":
+            in_["encodingFormat"] = MIRAX_URL
         inputs.append(in_)
         if isinstance(v, dict) and v.get("class") == "File":
             obj = crate.add_file(
                 v["path"],
                 fetch_remote=False,
                 validate_url=False,
-                properties={"name": k, "additionalType": add_type}
+                properties={"encodingFormat": MIRAX_URL}
             )
         else:
             obj = crate.add(ContextEntity(crate, f"#pv-{k}", properties={
                 "@type": "PropertyValue",
-                "additionalType": add_type,
                 "name": k,
                 "value": v,
             }))
@@ -141,7 +143,8 @@ def add_params(params, param_types, metadata, source, crate, action):
         out = crate.add(ContextEntity(crate, f"#param-{k}", properties={
             "@type": "FormalParameter",
             "name": k,
-            "additionalType": ZARR_URL,
+            "additionalType": "ImageObject",
+            "encodingFormat": ZARR_URL,
         }))
         outputs.append(out)
         path = source / v["location"]
@@ -151,7 +154,7 @@ def add_params(params, param_types, metadata, source, crate, action):
             v["location"],
             fetch_remote=False,
             validate_url=False,
-            properties={"contentSize": v["size"]}
+            properties={"encodingFormat": ZARR_URL, "contentSize": v["size"]}
         )
         results.append(res)
     workflow["output"] = outputs
