@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 PROJECT=$1
-REPO=${2:-git@github.com:mdrio/deephealth-pipelines.git}
+REPO=${2:-https://github.com/crs4/deephealth-pipelines.git}
 BRANCH=${3:-develop}
 
 git clone $REPO $PROJECT
