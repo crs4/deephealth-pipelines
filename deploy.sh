@@ -9,4 +9,5 @@ git checkout $BRANCH
 ./create_env.sh
 sed -i "s|PROJECT=dev|PROJECT=$(basename $PROJECT)|g" .env
 sed -i "s|DOCKER_NETWORK=deephealth|DOCKER_NETWORK=deephealth-$(basename $PROJECT)|g" .env
-sed  -i "s|omeseadragon:4080|${PROJECT}.omenginx.local:${PROXY_PORT}|g" promort_config/config.yaml
+source .env
+sed  -i "s|omeseadragon:4080|$(basename $PROJECT).omenginx.local:${PROXY_PORT}|g" promort_config/config.yaml
