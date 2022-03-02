@@ -23,7 +23,7 @@ from airflow.utils import timezone
 from airflow.utils.state import State
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.types import DagRunType
-from utils import check_gpus_available, copy_slide, docker_run, move_slide
+from utils import check_gpus_available, copy_slide, docker_run, move_slide, remove_slide
 
 logger = logging.getLogger("watch-dir")
 
@@ -46,8 +46,8 @@ PROMORT_TOOLS_IMG = Variable.get("PROMORT_TOOLS_IMG")
 
 def handle_error(ctx):
     slide = ctx["params"]["slide"]
-    move_slide(os.path.join(STAGE_DIR, slide), FAILED_DIR)
-    _remove_slide_from_omero(slide)
+    copy_slide(os.path.join(STAGE_DIR, slide), FAILED_DIR)
+    #  _remove_slide_from_omero(slide)
 
 
 def _remove_slide_from_omero(slide):
@@ -121,7 +121,11 @@ def prepare_data():
     except FileExistsError:
         logger.info("slide %s already in backup", slide)
 
-    move_slide(os.path.join(INPUT_DIR, slide), STAGE_DIR)
+    try:
+        move_slide(os.path.join(INPUT_DIR, slide), STAGE_DIR)
+    except shutil.Error as ex:
+        logger.info("slide already in stage, removing from input dir")
+        remove_slide(os.path.join(INPUT_DIR, slide))
     return slide
 
 
