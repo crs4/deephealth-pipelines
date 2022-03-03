@@ -1,4 +1,5 @@
 import logging
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -7,6 +8,7 @@ logger = logging.getLogger("local-importer")
 
 _copy_registry = {}
 _move_registry = {}
+_remove_registry = {}
 
 
 def copy_slide(slide_path: str, dest: str):
@@ -25,6 +27,11 @@ def move_slide(slide_path: str, dest: str):
         slide_path,
         dest,
     )
+
+
+def remove_slide(slide_path: str):
+    slide_path = Path(slide_path)
+    _remove_registry.get(slide_path.suffix[1:], _remove_file)(slide_path)
 
 
 def _copy_file(slide_path: Path, dest_dir: Path):
@@ -62,8 +69,20 @@ def _move_mrxs(slide_path: Path, dest_dir: Path):
     _move_file(slide_path, dest_dir)
 
 
+def _remove_file(slide_path: Path):
+    os.remove(slide_path)
+
+
+def _remove_mrxs(slide_path: Path):
+    os.remove(slide_path)
+    shutil.rmtree(
+        Path(slide_path.parent.absolute(), slide_path.stem), ignore_errors=True
+    )
+
+
 _copy_registry["mrxs"] = _copy_mrxs
 _move_registry["mrxs"] = _move_mrxs
+_remove_registry["mrxs"] = _remove_mrxs
 
 
 def check_gpus_available(gpus):
