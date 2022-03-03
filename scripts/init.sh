@@ -15,7 +15,7 @@ airflow variables set OME_SEADRAGON_REGISTER_PREDICTIONS $OME_SEADRAGON_URL/ome_
 airflow variables set OME_SEADRAGON_URL $OME_SEADRAGON_URL
 
 airflow variables set PREDICTIONS_MODE 'serial'
-airflow variables set SERIAL_PREDICTIONS_PARAMS '{ "slide": { "class": "File", "path": null }, "tissue-low-level": 9, "tissue-low-label": "tissue_low", "tissue-high-level": 4,  "tissue-high-label": "tissue_high", "tissue-high-filter": "tissue_low>0.1",   "gpu": 0, "tumor-level": 1, "tumor-label": "tumor", "tumor-filter": "tissue_low>0.8" }'
+airflow variables set SERIAL_PREDICTIONS_PARAMS '{ "slide": { "class": "File", "path": null }, "tissue-low-level": 9, "tissue-low-label": "tissue_low", "tissue-high-level": 4,  "tissue-high-label": "tissue_high", "tissue-high-filter": "tissue_low>0.1",   "gpu": 0, "tumor-level": 1, "tumor-label": "tumor", "tumor-filter": "tissue_low>0.8", "gleason-level": 1, "gleason-label": "gleason", "gleason-filter": "tissue_low>0.8"  }'
 
 airflow variables set ROI_THRESHOLD '0.8'
 airflow variables set PROMORT_TOOLS_IMG  $PROMORT_TOOLS_IMG

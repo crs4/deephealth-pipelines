@@ -106,7 +106,7 @@ def create_dag():
                     task_id=f"add_{prediction.value}_to_promort",
                 )(prediction.value, slide, prediction_label, omero_id)
 
-                if prediction == Prediction.TUMOR:
+                if prediction in {Prediction.TUMOR, Prediction.GLEASON}:
                     tumor_branch(prediction_label, prediction, slide)
                 elif prediction == Prediction.TISSUE:
                     tissue_branch(prediction_label, prediction_path, prediction_id)
@@ -227,7 +227,7 @@ def add_prediction_to_omero(prediction, dag_info) -> Dict[str, str]:
     location = _get_prediction_location(prediction, output_dir)
     dest = _move_prediction_to_omero_dir(location)
     return _register_prediction_to_omero(
-        os.path.basename(dest), prediction == Prediction.TUMOR
+        os.path.basename(dest), prediction in {Prediction.TUMOR, Prediction.GLEASON}
     )
 
 
@@ -361,6 +361,7 @@ def create_tissue_fragments(prediction_id, shapes_filename):
 class Prediction(Enum):
     TISSUE = "tissue"
     TUMOR = "tumor"
+    GLEASON = "gleason"
 
 
 def _get_prediction_path(prediction: Prediction, dag_id: str, dag_run_id: str) -> str:
