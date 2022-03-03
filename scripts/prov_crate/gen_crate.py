@@ -44,7 +44,7 @@ except ImportError:
 
 METADATA_BASENAME = "metadata.yaml"
 WORKFLOW_NAME = "Promort tissue and tumor prediction"
-WORKFLOW_VERSION = "0.1.0b1"
+WORKFLOW_VERSION = "0.3.0b15"
 WORKFLOW_URL = "https://github.com/crs4/deephealth-pipelines"
 WORKFLOW_LICENSE = "MIT"
 TYPE_MAP = {
