@@ -7,8 +7,10 @@ import os
 import shutil
 import sys
 import time
+from dataclasses import dataclass
 from collections import defaultdict
 from getpass import getpass
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, List
 
@@ -64,31 +66,29 @@ class MRXSCopy(SlideCopy, name="mrxs"):
 
 
 class SlideImporter:
-    def __init__(self, server_url: str, user: str, password: str, wait: bool = False):
-        self.server_url = server_url
-        self._user = user
-        self._password = password
+    def __init__(
+        self,
+        client: "BaseClient",
+        wait: bool = False,
+        rerun: str = None,
+    ):
+        self.client = client
         self._stage_dir = self._get_stage_dir()
         self._input_dir = self._get_input_dir()
         self.wait = wait
+        self.rerun = rerun
 
     def _get_stage_dir(self):
-        return self._get_var("stage_dir")
+        return self.client.get_var("stage_dir")
 
     def _get_input_dir(self):
-        return self._get_var("input_dir")
-
-    def _get_var(self, name: str) -> str:
-        response = requests.get(
-            os.path.join(self.server_url, f"api/v1/variables/{name}"),
-            auth=HTTPBasicAuth(self._user, self._password),
-        )
-        response.raise_for_status()
-        return response.json()["value"]
+        return self.client.get_var("input_dir")
 
     def import_slides(self, params: Dict = None) -> int:
         params = params or {}
-        slides = list(Path(self._input_dir).iterdir())
+        source_dir = self._stage_dir if self.rerun else self._input_dir
+        pattern = self.rerun or "*"
+        slides = list(Path(source_dir).glob(pattern))
         faiures = 0
         for slide in self._iter_slides(slides):
             logger.info("Processing slide %s", slide)
@@ -103,65 +103,20 @@ class SlideImporter:
         now = datetime.datetime.now()
         timezone = pytz.timezone("Europe/Rome")
         now = timezone.localize(now)
-        payload = {
-            "dag_run_id": f"{slide.name}-{now.isoformat()}",
-            "execution_date": now.isoformat(),
-            "conf": {"slide": slide.name, "params": params},
-        }
-        logger.debug("trigger dag with payload %s", payload)
+        date = now.isoformat()
+        dag_run_id = f"{slide.name}-{date}"
+        conf = {"slide": slide.name, "params": params}
         dag_id = "pipeline"
-        response = requests.post(
-            os.path.join(self.server_url, f"api/v1/dags/{dag_id}/dagRuns"),
-            auth=HTTPBasicAuth(self._user, self._password),
-            headers={"Content-type": "application/json"},
-            json=payload,
-        )
-        logger.debug(response.json())
-        response.raise_for_status()
+        dag_run_id = self.client.run_pipeline(dag_id, dag_run_id, date, conf)
+
         if self.wait:
-            dag_run_id = requests.utils.quote(response.json()["dag_run_id"])
             self._check_completion(slide, dag_id, dag_run_id)
 
     def _check_completion(self, slide, dag_id, dag_run_id):
         state = "running"
         while state == "running":
             time.sleep(10)
-            response = requests.get(
-                os.path.join(
-                    self.server_url, f"api/v1/dags/{dag_id}/dagRuns/{dag_run_id}"
-                ),
-                auth=HTTPBasicAuth(self._user, self._password),
-                headers={"Content-type": "application/json"},
-            )
-            response.raise_for_status()
-            state = response.json()["state"]
-
-            instances_resp = requests.get(
-                os.path.join(
-                    self.server_url,
-                    f"api/v1/dags/{dag_id}/dagRuns/{dag_run_id}/taskInstances",
-                ),
-                auth=HTTPBasicAuth(self._user, self._password),
-                headers={"Content-type": "application/json"},
-            )
-            instances_resp.raise_for_status()
-
-            instances = defaultdict(list)
-            for t in instances_resp.json()["task_instances"]:
-                instances[t["state"]].append(t["task_id"])
-                if t["state"] in {"failed", "up_for_retry"}:
-                    log_resp = requests.get(
-                        os.path.join(
-                            self.server_url,
-                            f"api/v1/dags/{dag_id}/dagRuns/{dag_run_id}/taskInstances/{t['task_id']}/logs/{t['try_number']}",
-                        ),
-                        auth=HTTPBasicAuth(self._user, self._password),
-                        headers={"Content-type": "application/json"},
-                    )
-                    log_resp.raise_for_status()
-                    logger.error("log: %s,", log_resp.text)
-
-            logger.info("task instances: %s", instances)
+            state = self.client.get_state(dag_id, dag_run_id)
 
         if state != "success":
             raise PipelineFailure(f"pipeline failed for slide {slide}")
@@ -172,6 +127,59 @@ class SlideImporter:
             logger.info("slide %s slide.is_dir() %s", slide.as_posix(), slide.is_dir())
             if not slide.is_dir() and slide.exists():
                 yield slide
+
+
+class BaseClient(ABC):
+    @abstractmethod
+    def run_pipeline(self, dag_id: str, dag_run_id, date: str, conf: Dict) -> str:
+        ...
+
+    @abstractmethod
+    def get_var(self, name: str) -> str:
+        ...
+
+    @abstractmethod
+    def get_state(self, dag_id, dag_run_id):
+        ...
+
+
+@dataclass
+class Client(BaseClient):
+    server_url: str
+    user: str
+    password: str
+
+    def run_pipeline(self, dag_id: str, dag_run_id, date: str, conf: Dict) -> str:
+        payload = {"dag_run_id": dag_run_id, "execution_date": date, "conf": conf}
+
+        response = requests.post(
+            os.path.join(self.server_url, f"api/v1/dags/{dag_id}/dagRuns"),
+            auth=HTTPBasicAuth(self.user, self.password),
+            headers={"Content-type": "application/json"},
+            json=payload,
+        )
+        logger.debug(response.json())
+        response.raise_for_status()
+        dag_run_id = requests.utils.quote(response.json()["dag_run_id"])
+        return dag_run_id
+
+    def get_var(self, name: str) -> str:
+        response = requests.get(
+            os.path.join(self.server_url, f"api/v1/variables/{name}"),
+            auth=HTTPBasicAuth(self.user, self.password),
+        )
+        response.raise_for_status()
+        return response.json()["value"]
+
+    def get_state(self, dag_id, dag_run_id):
+        response = requests.get(
+            os.path.join(self.server_url, f"api/v1/dags/{dag_id}/dagRuns/{dag_run_id}"),
+            auth=HTTPBasicAuth(self.user, self.password),
+            headers={"Content-type": "application/json"},
+        )
+        response.raise_for_status()
+        state = response.json()["state"]
+        return state
 
 
 def main(
@@ -192,9 +200,7 @@ def main(
     logger.setLevel(getattr(logging, log_level.upper()))
     password = password or getpass()
     failures = SlideImporter(
-        server_url,
-        user,
-        password,
+        Client(server_url, user, password),
         wait,
     ).import_slides(params)
     sys.exit(failures)
