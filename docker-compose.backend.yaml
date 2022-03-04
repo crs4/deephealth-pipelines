@@ -95,7 +95,8 @@ services:
       - ./data/promort-pg-data:/var/lib/postgresql/data
 
   promort-web:
-    image: crs4/promort-web:0.9.3
+
+    image: crs4/promort-web:0.9.4-beta2
     # image: promort-web:dev
     # build:
     #   context: ./build/promort
