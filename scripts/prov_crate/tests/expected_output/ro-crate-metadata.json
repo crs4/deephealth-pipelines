@@ -4,7 +4,7 @@
         {
             "@id": "./",
             "@type": "Dataset",
-            "datePublished": "2022-03-03T14:29:10+00:00",
+            "datePublished": "2022-03-07T11:08:03+00:00",
             "hasPart": [
                 {
                     "@id": "predictions.cwl"
@@ -29,10 +29,10 @@
             },
             "mentions": [
                 {
-                    "@id": "#6c1a2833-7184-4294-a6f7-fed79a3f6316"
+                    "@id": "#69269ae5-4a08-498d-8cf3-635b6b4d3766"
                 }
             ],
-            "name": "Promort tissue and tumor prediction"
+            "name": "Promort prediction run on 2022-03-02 at 17:50:05"
         },
         {
             "@id": "ro-crate-metadata.json",
@@ -97,7 +97,7 @@
                     "@id": "#param-gleason-filter"
                 }
             ],
-            "name": "Promort tissue and tumor prediction",
+            "name": "Promort tissue, tumor and Gleason score prediction",
             "output": [
                 {
                     "@id": "#param-gleason"
@@ -129,13 +129,13 @@
             "version": "v1.2"
         },
         {
-            "@id": "#6c1a2833-7184-4294-a6f7-fed79a3f6316",
+            "@id": "#69269ae5-4a08-498d-8cf3-635b6b4d3766",
             "@type": "CreateAction",
             "endTime": "2022-03-02T17:54:48.326183+00:00",
             "instrument": {
                 "@id": "predictions.cwl"
             },
-            "name": "Promort prediction run on 2022-03-02T17:50:05.842707+00:00",
+            "name": "Promort prediction run on 2022-03-02 at 17:50:05",
             "object": [
                 {
                     "@id": "http://slide-repository:5000/slides/DHT00001-1.mrxs"

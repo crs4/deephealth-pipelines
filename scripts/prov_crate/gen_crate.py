@@ -43,7 +43,7 @@ except ImportError:
 
 
 METADATA_BASENAME = "metadata.yaml"
-WORKFLOW_NAME = "Promort tissue and tumor prediction"
+WORKFLOW_NAME = "Promort tissue, tumor and Gleason score prediction"
 WORKFLOW_VERSION = "0.3.0b15"
 WORKFLOW_URL = "https://github.com/crs4/deephealth-pipelines"
 WORKFLOW_LICENSE = "MIT"
@@ -93,14 +93,16 @@ def get_param_types(params, wf_def):
 
 
 def add_action(crate, metadata):
-    start_date = metadata["start_date"].isoformat()
-    end_date = metadata["end_date"].isoformat()
+    start_date = metadata["start_date"]
+    end_date = metadata["end_date"]
     workflow = crate.mainEntity
     properties = {
         "@type": "CreateAction",
-        "name": f"Promort prediction run on {start_date}",
-        "startTime": start_date,
-        "endTime": end_date,
+        "name": "Promort prediction run on {}".format(
+            start_date.strftime('%Y-%m-%d at %H:%M:%S')
+        ),
+        "startTime": start_date.isoformat(),
+        "endTime": end_date.isoformat(),
     }
     action = crate.add(ContextEntity(crate, properties=properties))
     action["instrument"] = workflow
@@ -172,7 +174,7 @@ def make_crate(source, out_dir):
         workflow_path, metadata["workflow"], main=True, lang="cwl",
         lang_version=wf_def.cwlVersion, gen_cwl=False
     )
-    workflow["name"] = crate.root_dataset["name"] = WORKFLOW_NAME
+    workflow["name"] = WORKFLOW_NAME
     workflow["version"] = WORKFLOW_VERSION  # this should be in the report
     workflow["url"] = crate.root_dataset["isBasedOn"] = WORKFLOW_URL
     crate.root_dataset["license"] = WORKFLOW_LICENSE
@@ -182,6 +184,7 @@ def make_crate(source, out_dir):
     param_types = get_param_types(params, wf_def)
     add_params(params, param_types, metadata, source, crate, action)
     crate.root_dataset["mentions"] = [action]
+    crate.root_dataset["name"] = action["name"]
     crate.write(out_dir)
 
 
