@@ -70,13 +70,13 @@ class SlideImporter:
         self,
         client: "BaseClient",
         wait: bool = False,
-        rerun: str = None,
+        re_run: str = None,
     ):
         self.client = client
         self._stage_dir = self._get_stage_dir()
         self._input_dir = self._get_input_dir()
         self.wait = wait
-        self.rerun = rerun
+        self.re_run = re_run
 
     def _get_stage_dir(self):
         return self.client.get_var("stage_dir")
@@ -86,8 +86,8 @@ class SlideImporter:
 
     def import_slides(self, params: Dict = None) -> int:
         params = params or {}
-        source_dir = self._stage_dir if self.rerun else self._input_dir
-        pattern = self.rerun or "*"
+        source_dir = self._stage_dir if self.re_run else self._input_dir
+        pattern = self.re_run or "*"
         slides = list(Path(source_dir).glob(pattern))
         faiures = 0
         for slide in self._iter_slides(slides):
@@ -190,6 +190,7 @@ def main(
     params: (str, "p") = None,
     wait: bool = False,
     password: (str, "P") = None,
+    re_run: str = None,
 ):
     """
     :params params: json containing params to override when running
@@ -200,8 +201,7 @@ def main(
     logger.setLevel(getattr(logging, log_level.upper()))
     password = password or getpass()
     failures = SlideImporter(
-        Client(server_url, user, password),
-        wait,
+        Client(server_url, user, password), wait, re_run=re_run
     ).import_slides(params)
     sys.exit(failures)
 

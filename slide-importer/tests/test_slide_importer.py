@@ -136,15 +136,15 @@ def test_slide_importer(slide_importer, dag_id, dag_run_id, tmp_path, dir_info):
     assert slide_importer.client.run_pipeline.call_count == len(dir_info["input_dir"])
 
 
-@pytest.mark.parametrize("rerun", ["*", "stage_1"])
-def test_slide_importer_rerun(slide_importer, dag_id, dag_run_id, dir_info, rerun):
-    slide_importer.rerun = "*"
+@pytest.mark.parametrize("re_run", ["*", "stage_1"])
+def test_slide_importer_rerun(slide_importer, dag_id, dag_run_id, dir_info, re_run):
+    slide_importer.re_run = "*"
     slide_importer.import_slides()
 
     call_args = slide_importer.client.run_pipeline.call_args.args
     assert call_args[3]["slide"].startswith("stage")
     assert (
         slide_importer.client.run_pipeline.call_count == len(dir_info["stage_dir"])
-        if rerun == "*"
+        if re_run == "*"
         else 1
     )
