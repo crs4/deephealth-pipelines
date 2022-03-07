@@ -112,7 +112,7 @@ def test_client_get_state(client, dag_id, dag_run_id):
 @pytest.fixture
 def dir_info(tmp_path):
     dir_info = {
-        "input_dir": ["input_1.mrxs", "input_2.mrxs"],
+        "input_dir": ["input_1.mrxs", "input_2.mrxs", "input_3.mrxs"],
         "stage_dir": ["stage_1.mrxs", "stage_2.mrxs"],
     }
 
@@ -131,6 +131,8 @@ def dir_info(tmp_path):
 def test_slide_importer(slide_importer, dag_id, dag_run_id, tmp_path, dir_info):
     slide_importer.import_slides()
 
+    call_args = slide_importer.client.run_pipeline.call_args.args
+    assert call_args[3]["slide"].startswith("input")
     assert slide_importer.client.run_pipeline.call_count == len(dir_info["input_dir"])
 
 
@@ -139,6 +141,8 @@ def test_slide_importer_rerun(slide_importer, dag_id, dag_run_id, dir_info, reru
     slide_importer.rerun = "*"
     slide_importer.import_slides()
 
+    call_args = slide_importer.client.run_pipeline.call_args.args
+    assert call_args[3]["slide"].startswith("stage")
     assert (
         slide_importer.client.run_pipeline.call_count == len(dir_info["stage_dir"])
         if rerun == "*"
