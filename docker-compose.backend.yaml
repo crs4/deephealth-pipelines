@@ -42,7 +42,7 @@ services:
       - ome-server-var:/opt/omero/server/OMERO.server/var
 
   omeseadragon:
-    image: crs4/ome_seadragon-web:0.8.3-ome5.11
+    image: crs4/ome_seadragon-web:0.8.4-ome5.11-rc2
     depends_on:
       - omero-server
       - redis-server
@@ -95,7 +95,8 @@ services:
       - ./data/promort-pg-data:/var/lib/postgresql/data
 
   promort-web:
-    image: crs4/promort-web:0.9.3
+
+    image: crs4/promort-web:0.9.4-beta2
     # image: promort-web:dev
     # build:
     #   context: ./build/promort
