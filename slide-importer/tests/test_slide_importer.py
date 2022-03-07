@@ -109,41 +109,38 @@ def test_client_get_state(client, dag_id, dag_run_id):
     )
 
 
-def test_slide_importer(slide_importer, dag_id, dag_run_id, tmp_path):
-    prepare_dir(tmp_path)
-    assert slide_importer.client.get_var.call_count == 2
-    slide_importer.client.get_var.assert_any_call("stage_dir")
-    slide_importer.client.get_var.assert_any_call("input_dir")
-
-    slide_importer.import_slides()
-
-    assert slide_importer.client.run_pipeline.call_count == 2
-
-
 @pytest.fixture
-def dir_with_data(tmp_path):
-    stage_dir = os.path.join(tmp_path, "stage_dir")
-    input_dir = os.path.join(tmp_path, "input_dir")
+def dir_info(tmp_path):
+    dir_info = {
+        "input_dir": ["input_1.mrxs", "input_2.mrxs"],
+        "stage_dir": ["stage_1.mrxs", "stage_2.mrxs"],
+    }
 
-    os.makedirs(stage_dir)
-    os.makedirs(input_dir)
+    for dir_name, slides in dir_info.items():
+        dir_name = os.path.join(tmp_path, dir_name)
+        os.makedirs(dir_name)
+        for slide in slides:
+            open(os.path.join(dir_name, slide), "w")
+            no_ext, ext = os.path.splitext(slide)
+            if ext == ".mrxs":
+                os.makedirs(os.path.join(dir_name, no_ext))
 
-    open(os.path.join(input_dir, "a.mrxs"), "a")
-    open(os.path.join(input_dir, "b.mrxs"), "a")
-    os.makedirs(os.path.join(input_dir, "a"))
-    os.makedirs(os.path.join(input_dir, "b"))
-
-    open(os.path.join(stage_dir, "c.mrxs"), "a")
-    os.makedirs(os.path.join(stage_dir, "c"))
-    return tmp_path
+    return dir_info
 
 
-def test_slide_importer_rerun(slide_importer, dag_id, dag_run_id, dir_with_data):
-    slide_importer.rerun = "*"
-    assert slide_importer.client.get_var.call_count == 2
-    slide_importer.client.get_var.assert_any_call("stage_dir")
-    slide_importer.client.get_var.assert_any_call("input_dir")
-
+def test_slide_importer(slide_importer, dag_id, dag_run_id, tmp_path, dir_info):
     slide_importer.import_slides()
 
-    assert slide_importer.client.run_pipeline.call_count == 1
+    assert slide_importer.client.run_pipeline.call_count == len(dir_info["input_dir"])
+
+
+@pytest.mark.parametrize("rerun", ["*", "stage_1"])
+def test_slide_importer_rerun(slide_importer, dag_id, dag_run_id, dir_info, rerun):
+    slide_importer.rerun = "*"
+    slide_importer.import_slides()
+
+    assert (
+        slide_importer.client.run_pipeline.call_count == len(dir_info["stage_dir"])
+        if rerun == "*"
+        else 1
+    )
