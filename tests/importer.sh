@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -x
-cd slide-importer
+cd ../slide-importer
+poetry install
 poetry run pytest
 
 
