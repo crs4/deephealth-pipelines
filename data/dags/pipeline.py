@@ -120,12 +120,20 @@ def prepare_data():
         copy_slide(os.path.join(INPUT_DIR, slide), BACKUP_DIR)
     except FileExistsError:
         logger.info("slide %s already in backup", slide)
+    except Exception as ex:
+        logger.error("failed to backup slide, is it a re-run? Ex: %s", ex)
 
     try:
         move_slide(os.path.join(INPUT_DIR, slide), STAGE_DIR)
-    except shutil.Error as ex:
+    except shutil.Error:
         logger.info("slide already in stage, removing from input dir")
-        remove_slide(os.path.join(INPUT_DIR, slide))
+        try:
+            remove_slide(os.path.join(INPUT_DIR, slide))
+        except Exception as ex:
+            logger.error(
+                "cannot remove slide from input dir, is it a re-run? Ex %s", ex
+            )
+
     return slide
 
 
