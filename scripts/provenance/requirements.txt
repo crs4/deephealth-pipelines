@@ -1,0 +1,3 @@
+cwl-utils==0.13
+pipe==1.6.0
+networkx==2.7.1
