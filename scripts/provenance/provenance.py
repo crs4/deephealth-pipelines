@@ -14,15 +14,6 @@ Output = NewType("Output", str)
 Binding = NewType("Binding", Dict[str, "WorkflowElement"])
 
 
-#  @dataclass
-#  class Provenance:
-#      target: Path
-#      command: str
-#      params: Dict
-#      parent: "Provenance" = None
-#
-
-
 class Workflow(abc.ABC):
     @abc.abstractmethod
     def inputs(self, name: str = None) -> Union["InOut", List["InOut"]]:
