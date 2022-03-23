@@ -284,8 +284,14 @@ class Artefact:
     name: str
     workflow_step: WorkflowStep
     inputs: Dict[str, Input]
-    command: Optional[str]
-    docker_image: Optional[str]
+
+    @property
+    def command(self) -> Optional[str]:
+        return self.workflow_step.command
+
+    @property
+    def docker_image(self) -> Optional[str]:
+        return self.workflow_step.docker_image
 
 
 @dataclass
@@ -319,7 +325,5 @@ class ArtefactFactory:
             artefact_name,
             workflow_step,
             inputs,
-            workflow_step.command,
-            workflow_step.docker_image,
         )
         artefacts[inout.name] = artefact
