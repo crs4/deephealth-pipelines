@@ -239,28 +239,6 @@ class NXWorkflowFactory(WorkflowFactory):
 
         return dag
 
-    #  def _get_params(self) -> List[str]:
-    #      return map(
-    #          self._get_id,
-    #          self.cwl_workflow.inputs,
-    #      )
-    #
-    #  def _get_outputs(self) -> Dict[str, WorkflowStep]:
-    #      return dict(map(self._get_output, self.cwl_workflow.outputs))
-    #
-    #  def _get_output(self, cwl_output) -> Tuple[str, WorkflowStep]:
-    #      _id = self._get_id(cwl_output)
-    #      step_id = cwl_output.outputSource.replace(f"/{_id}", "")
-    #      cwl_step = self._get_step_by_id(step_id)
-    #      docker_img = list(
-    #          filter(
-    #              lambda x: isinstance(x, get_args(cwl_parser.DockerRequirement)),
-    #              cwl_step.run.requirements,
-    #          )
-    #      )[0].dockerPull
-    #      base_command = cwl_step.run.baseCommand
-    #      params = self._get_step_params(cwl_step)
-    #
     def _get_element_by_id(
         self, cwl_element: CWLElement, _id: str
     ) -> cwl_parser.WorkflowStep:
@@ -268,11 +246,5 @@ class NXWorkflowFactory(WorkflowFactory):
             filter(lambda s: s.id == _id, getattr(self.cwl_workflow, cwl_element))
         )[0]
 
-    #
-    #  def _get_step_params(self, step: cwl_parser.WorkflowStep) -> List[WorkflowElement]:
-    #       params = step.in_ | map(self._get_id) | map(lambda x: )
-    #
     def _get_id(self, element) -> str:
         return element.split("#")[1] if "#" in element else element
-
-    #
