@@ -96,9 +96,9 @@ class WorkflowStep(WorkflowElement):
 class NXWorkflow(Workflow):
     def __init__(self, dag: nx.DiGraph):
         self._dag = dag
-        self._outputs: Dict[str, InOut] = None
-        self._inputs: Dict[str, InOut] = None
-        self._steps: Dict[str, WorkflowStep] = None
+        self._outputs: Optional[Dict[str, InOut]] = None
+        self._inputs: Optional[Dict[str, InOut]] = None
+        self._steps: Optional[Dict[str, WorkflowStep]] = None
 
     def outputs(self, name: str = None) -> Union["InOut", List["InOut"]]:
         if self._outputs is None:
@@ -267,9 +267,13 @@ class NXWorkflowFactory(WorkflowFactory):
         return element.split("#")[1] if "#" in element else element
 
     def _get_docker_image(self, step) -> Union[str, None]:
+        docker_image = None
         for req in step.run.requirements:
             if isinstance(req, get_args(cwl_parser.DockerRequirement)):
-                return req.dockerPull
+                docker_image = req.dockerPull
+                break
+
+        return docker_image
 
 
 Input = Union[str, int, float, "Artefact", None]
