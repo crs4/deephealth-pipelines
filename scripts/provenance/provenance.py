@@ -8,7 +8,6 @@ from typing import Dict, List, Literal, NewType, Optional, TypedDict, Union, get
 
 import cwl_utils.parser as cwl_parser
 import networkx as nx
-from pipe import map
 
 DockerImage = NewType("DockerImage", str)
 Output = NewType("Output", str)
@@ -238,9 +237,9 @@ class NXWorkflowFactory(WorkflowFactory):
 
     def _get_dag(self) -> nx.DiGraph:
         dag = nx.DiGraph()
-        inputs = list(self.cwl_workflow.inputs | map(lambda x: self._get_id(x.id)))
-        outputs = list(self.cwl_workflow.outputs | map(lambda x: self._get_id(x.id)))
-        dag.add_nodes_from(inputs + outputs, type="inout")
+        inputs = map(lambda x: self._get_id(x.id), self.cwl_workflow.inputs)
+        outputs = map(lambda x: self._get_id(x.id), self.cwl_workflow.outputs)
+        dag.add_nodes_from(list(inputs) + list(outputs), type="inout")
 
         for step in self.cwl_workflow.steps:
             step_id = self._get_id(step.id)
