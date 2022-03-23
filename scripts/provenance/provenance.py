@@ -290,7 +290,7 @@ class Artefact:
     workflow_step: WorkflowStep
     inputs: Dict[str, Input]
     command: Optional[str]
-    docker_img: Optional[str]
+    docker_image: Optional[str]
 
 
 @dataclass
@@ -320,5 +320,11 @@ class ArtefactFactory:
                     self._get(node, artefacts)
                     inputs[binding] = artefacts[node.name]
 
-        artefact = Artefact(artefact_name, workflow_step, inputs)
+        artefact = Artefact(
+            artefact_name,
+            workflow_step,
+            inputs,
+            workflow_step.command,
+            workflow_step.docker_image,
+        )
         artefacts[inout.name] = artefact

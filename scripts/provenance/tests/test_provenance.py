@@ -119,6 +119,8 @@ def test_artefacts(workflow, params):
         "src": {"class": "File", "path": "test.mrxs"},
     }
     assert tissue_low.inputs == expected_inputs
+    assert tissue_low.command == None
+    assert tissue_low.docker_image == "mdrio/slaid:1.0.0-tissue_model-eddl_2-cudnn"
 
     tumor = artefact_factory.get("tumor")
     assert tumor.name == "tumor"
@@ -134,6 +136,8 @@ def test_artefacts(workflow, params):
         "filter_slide": tissue_low,
     }
     assert tumor.inputs == expected_inputs
+    assert tumor.command == None
+    assert tumor.docker_image == "mdrio/slaid:1.0.0-tumor_model-level_1-cudnn"
 
     tissue = artefact_factory.get("tissue")
     assert tissue.name == "tissue"
@@ -149,3 +153,5 @@ def test_artefacts(workflow, params):
         "filter_slide": tissue_low,
     }
     assert tissue.inputs == expected_inputs
+    assert tissue.command == None
+    assert tissue.docker_image == "mdrio/slaid:1.0.0-tissue_model-eddl_2-cudnn"
