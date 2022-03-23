@@ -90,7 +90,8 @@ def create_dag():
 
         dag_info = predictions()
         slide_to_promort >> dag_info
-        generate_rocrate(gather_report(dag_info))
+        report_dir = gather_report(dag_info)
+        generate_rocrate(report_dir)
 
         for prediction in Prediction:
             with TaskGroup(group_id=f"add_{prediction.value}_to_backend"):
@@ -104,7 +105,7 @@ def create_dag():
                 prediction_id = task(
                     add_prediction_to_promort,
                     task_id=f"add_{prediction.value}_to_promort",
-                )(prediction.value, slide, prediction_label, omero_id)
+                )(prediction.value, slide, prediction_label, omero_id, report_dir)
 
                 if prediction == Prediction.TUMOR:
                     tumor_branch(prediction_label, prediction, slide)
@@ -244,6 +245,7 @@ def add_prediction_to_promort(
     slide_label: str,
     prediction_label: str,
     omero_id: str,
+    report_id: str,
     review_required: bool = False,
 ) -> str:
 
