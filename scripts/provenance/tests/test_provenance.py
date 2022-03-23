@@ -19,39 +19,77 @@ def workflow(cwl_workflow):
 
 def test_workflow(workflow):
     inputs = [_in.name for _in in workflow.inputs()]
-    assert set(inputs) == set(
-        [
-            "gpu",
-            "slide",
-            "tissue-high-batch-size",
-            "tissue-high-chunk-size",
-            "tissue-high-filter",
-            "tissue-high-label",
-            "tissue-high-level",
-            "tissue-low-batch-size",
-            "tissue-low-chunk-size",
-            "tissue-low-label",
-            "tissue-low-level",
-            "tumor-batch-size",
-            "tumor-chunk-size",
-            "tumor-filter",
-            "tumor-label",
-            "tumor-level",
-        ]
-    )
+    expected_inputs = [
+        "gpu",
+        "slide",
+        "tissue-high-batch-size",
+        "tissue-high-chunk-size",
+        "tissue-high-filter",
+        "tissue-high-label",
+        "tissue-high-level",
+        "tissue-low-batch-size",
+        "tissue-low-chunk-size",
+        "tissue-low-label",
+        "tissue-low-level",
+        "tumor-batch-size",
+        "tumor-chunk-size",
+        "tumor-filter",
+        "tumor-label",
+        "tumor-level",
+    ]
+    assert len(inputs) == len(expected_inputs)
+    assert set(inputs) == set(expected_inputs)
 
     outputs = [out.name for out in workflow.outputs()]
-    assert set(outputs) == set(["tissue", "tumor"])
+    expected_outputs = ["tissue", "tumor"]
+    assert len(outputs) == len(expected_outputs)
+    assert set(outputs) == set(expected_outputs)
+
     steps = workflow.steps()
+
     assert set([s.name for s in steps]) == set(
         ["classify-tumor", "extract-tissue-high", "extract-tissue-low"]
     )
 
-    tissue_low = workflow.steps("extract-tissue-low")
-    assert tissue_low.in_binding == None
+    expected_steps = {
+        "extract-tissue-low": {
+            "batch-size": workflow.inputs("tissue-low-batch-size"),
+            "chunk-size": workflow.inputs("tissue-low-chunk-size"),
+            "gpu": workflow.inputs("gpu"),
+            "label": workflow.inputs("tissue-low-label"),
+            "level": workflow.inputs("tissue-low-level"),
+            "src": workflow.inputs("slide"),
+        },
+        "extract-tissue-high": {
+            "batch": workflow.inputs("tissue-high-batch-size"),
+            "chunk": workflow.inputs("tissue-high-chunk-size"),
+            "gpu": workflow.inputs("gpu"),
+            "label": workflow.inputs("tissue-high-label"),
+            "level": workflow.inputs("tissue-high-level"),
+            "src": workflow.inputs("slide"),
+            "filter": workflow.inputs("tissue-high-filter"),
+            "filter_slide": workflow.nodes("extract-tissue-low/tissue"),
+        },
+        "classify-tumor": {
+            "batch-size": workflow.inputs("tumor-batch-size"),
+            "chunk-size": workflow.inputs("tumor-chunk-size"),
+            "gpu": workflow.inputs("gpu"),
+            "label": workflow.inputs("tumor-label"),
+            "level": workflow.inputs("tumor-level"),
+            "src": workflow.inputs("slide"),
+            "filter": workflow.inputs("tumor-filter"),
+            "filter_slide": workflow.nodes("extract-tissue-low/tissue"),
+        },
+    }
+    assert (
+        workflow.steps("extract-tissue-low").in_binding
+        == expected_steps["extract-tissue-low"]
+    )
 
-    #  assert provenance.slide == "test.mrxs"
-    #  assert provenance.type_ == prediction
-    #  assert provenance.params.model == "mdrio/slaid:1.0.0-tumor_model-level_1-cudnn"
-    #  assert provenance.params.level == 1
-    #  assert provenance.params.filter_ == "tissue_low>0.8"
+    assert (
+        workflow.steps("extract-tissue-high").in_binding
+        == expected_steps["extract-tissue-high"]
+    )
+    assert (
+        workflow.steps("classify-tumor").in_binding == expected_steps["classify-tumor"]
+    )

@@ -37,6 +37,12 @@ class Workflow(abc.ABC):
     def steps(self, name: str = None) -> Union["WorkflowStep", List["WorkflowStep"]]:
         ...
 
+    @abc.abstractmethod
+    def nodes(
+        self, name: str = None
+    ) -> Union["WorkflowElement", List["WorkflowElement"]]:
+        ...
+
 
 class WorkflowElement(abc.ABC):
     @property
@@ -55,7 +61,10 @@ class WorkflowElement(abc.ABC):
         ...
 
     def __repr__(self):
-        return self.name
+        return f"<{self.name}>"
+
+    def __eq__(self, other):
+        return self.name == other.name
 
 
 class InOut(WorkflowElement, abc.ABC):
@@ -124,6 +133,19 @@ class NXWorkflow(Workflow):
         if name:
             return self._steps[name]
         return list(self._steps.values())
+
+    def nodes(
+        self, name: str = None
+    ) -> Union["WorkflowElement", List["WorkflowElement"]]:
+        nodes = {
+            node: NXWorkflowStep(node, self._dag)
+            if data.get("type") == "step"
+            else NXInOut(node, self._dag)
+            for node, data in self._dag.nodes(data=True)
+        }
+        if name:
+            return nodes[name]
+        return list(nodes.values())
 
 
 class NXWorkflowElement(WorkflowElement):
