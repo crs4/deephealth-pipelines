@@ -4,7 +4,7 @@
 import abc
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Literal, NewType, TypedDict, Union
+from typing import Dict, List, Literal, NewType, Optional, TypedDict, Union, get_args
 
 import cwl_utils.parser as cwl_parser
 import networkx as nx
@@ -68,7 +68,12 @@ class WorkflowElement(abc.ABC):
 
 
 class InOut(WorkflowElement, abc.ABC):
-    ...
+    @abc.abstractmethod
+    def is_input(self) -> bool:
+        ...
+
+    def is_output(self) -> bool:
+        ...
 
 
 class WorkflowStep(WorkflowElement):
@@ -84,12 +89,12 @@ class WorkflowStep(WorkflowElement):
 
     @property
     @abc.abstractmethod
-    def params(self) -> List[str]:
+    def command(self) -> Union[str, None]:
         ...
 
     @property
     @abc.abstractmethod
-    def outputs(self) -> List[str]:
+    def docker_image(self) -> Union[str, None]:
         ...
 
 
@@ -152,6 +157,7 @@ class NXWorkflowElement(WorkflowElement):
     def __init__(self, name: str, dag: nx.DiGraph):
         self._name = name
         self._dag = dag
+        self._node = dag.nodes[name]
 
     @property
     def name(self) -> str:
@@ -184,18 +190,24 @@ class NXInOut(InOut, NXWorkflowElement):
     def _add_binding(self, binding: Binding, label: str, node: str):
         binding[label] = NXWorkflowStep(node, self._dag)
 
+    def is_input(self) -> bool:
+        return len(self._dag.in_edges(self.name)) == 0
+
+    def is_output(self) -> bool:
+        return len(self._dag.out_edges(self.name)) == 0
+
 
 class NXWorkflowStep(NXWorkflowElement, WorkflowStep):
-    @property
-    def params(self) -> List[str]:
-        return [label for _, _, label in self._dag.in_edges(self.name, data=True)]
-
-    @property
-    def outputs(self) -> List[str]:
-        return [label for _, _, label in self._dag.edges(self.name, data=True)]
-
     def _add_binding(self, binding: Binding, label: str, node: str):
         binding[label] = NXInOut(node, self._dag)
+
+    @property
+    def command(self) -> Union[str, None]:
+        return self._node.get("command")
+
+    @property
+    def docker_image(self) -> Union[str, None]:
+        return self._node.get("docker_image")
 
 
 class WorkflowFactory(abc.ABC):
@@ -223,7 +235,13 @@ class NXWorkflowFactory(WorkflowFactory):
 
         for step in self.cwl_workflow.steps:
             step_id = self._get_id(step.id)
-            dag.add_node(step_id, type="step")
+            docker_image = self._get_docker_image(step)
+            dag.add_node(
+                step_id,
+                type="step",
+                command=step.run.baseCommand,
+                docker_image=docker_image,
+            )
 
             for in_ in step.in_:
                 dag.add_edge(
@@ -248,3 +266,51 @@ class NXWorkflowFactory(WorkflowFactory):
 
     def _get_id(self, element) -> str:
         return element.split("#")[1] if "#" in element else element
+
+    def _get_docker_image(self, step) -> Union[str, None]:
+        for req in step.run.requirements:
+            if isinstance(req, get_args(cwl_parser.DockerRequirement)):
+                return req.dockerPull
+
+
+Input = Union[str, int, float, "Artefact", None]
+
+
+@dataclass
+class Artefact:
+    name: str
+    workflow_step: WorkflowStep
+    inputs: Dict[str, Input]
+    command: Optional[str]
+    docker_img: Optional[str]
+
+
+@dataclass
+class ArtefactFactory:
+    worflow: Workflow
+    params: Dict
+
+    def get(self, name: str = None) -> Union[Artefact, List[Artefact]]:
+        artefacts = {}
+        outputs = self.worflow.outputs() if name is None else [self.worflow.nodes(name)]
+        for output in outputs:
+            self._get(output, artefacts)
+
+        return list(artefacts.values()) if name is None else artefacts[name]
+
+    def _get(self, inout: InOut, artefacts: Dict[str, Artefact]):
+        artefact_name = inout.name
+        workflow_step = list(inout.in_binding.values())[0]
+        inputs = {}
+        for binding, node in workflow_step.in_binding.items():
+            if node.is_input():
+                inputs[binding] = self.params.get(node.name)
+            else:
+                try:
+                    intermediate_artefact = artefacts[node.name]
+                except KeyError:
+                    self._get(node, artefacts)
+                    inputs[binding] = artefacts[node.name]
+
+        artefact = Artefact(artefact_name, workflow_step, inputs)
+        artefacts[inout.name] = artefact

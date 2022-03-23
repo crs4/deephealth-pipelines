@@ -3,7 +3,7 @@
 import json
 
 import pytest
-from provenance import NXWorkflowFactory
+from provenance import NXWorkflowFactory, ArtefactFactory
 from cwl_utils.parser import load_document_by_uri
 
 
@@ -15,6 +15,11 @@ def cwl_workflow():
 @pytest.fixture
 def workflow(cwl_workflow):
     return NXWorkflowFactory(cwl_workflow).get()
+
+
+@pytest.fixture
+def params():
+    return json.load(open("tests/data/params.json", "r"))
 
 
 def test_workflow(workflow):
@@ -81,15 +86,66 @@ def test_workflow(workflow):
             "filter_slide": workflow.nodes("extract-tissue-low/tissue"),
         },
     }
-    assert (
-        workflow.steps("extract-tissue-low").in_binding
-        == expected_steps["extract-tissue-low"]
-    )
+    tissue_low = workflow.steps("extract-tissue-low")
+    assert tissue_low.in_binding == expected_steps["extract-tissue-low"]
+    assert tissue_low.command == None
+    assert tissue_low.docker_image == "mdrio/slaid:1.0.0-tissue_model-eddl_2-cudnn"
 
-    assert (
-        workflow.steps("extract-tissue-high").in_binding
-        == expected_steps["extract-tissue-high"]
-    )
-    assert (
-        workflow.steps("classify-tumor").in_binding == expected_steps["classify-tumor"]
-    )
+    tissue_high = workflow.steps("extract-tissue-high")
+    assert tissue_high.in_binding == expected_steps["extract-tissue-high"]
+    assert tissue_high.command == None
+    assert tissue_low.docker_image == "mdrio/slaid:1.0.0-tissue_model-eddl_2-cudnn"
+
+    tumor = workflow.steps("classify-tumor")
+    assert tumor.in_binding == expected_steps["classify-tumor"]
+    assert tumor.command == None
+    assert tumor.docker_image == "mdrio/slaid:1.0.0-tumor_model-level_1-cudnn"
+
+
+def test_artefacts(workflow, params):
+    artefact_factory = ArtefactFactory(workflow, params)
+    artefacts = artefact_factory.get()
+    assert len(artefacts) == 3
+
+    tissue_low = artefact_factory.get("extract-tissue-low/tissue")
+
+    assert tissue_low.workflow_step == workflow.steps("extract-tissue-low")
+    expected_inputs = {
+        "batch-size": None,
+        "chunk-size": None,
+        "gpu": 0,
+        "label": "tissue_low",
+        "level": 9,
+        "src": {"class": "File", "path": "test.mrxs"},
+    }
+    assert tissue_low.inputs == expected_inputs
+
+    tumor = artefact_factory.get("tumor")
+    assert tumor.name == "tumor"
+    assert tumor.workflow_step == workflow.steps("classify-tumor")
+    expected_inputs = {
+        "batch-size": None,
+        "chunk-size": None,
+        "filter": "tissue_low>0.8",
+        "gpu": 0,
+        "label": "tumor",
+        "level": 1,
+        "src": {"class": "File", "path": "test.mrxs"},
+        "filter_slide": tissue_low,
+    }
+    assert tumor.inputs == expected_inputs
+
+    tissue = artefact_factory.get("tissue")
+    assert tissue.name == "tissue"
+    assert tissue.workflow_step == workflow.steps("extract-tissue-high")
+    expected_inputs = {
+        "batch": None,
+        "chunk": None,
+        "filter": "tissue_low>0.1",
+        "gpu": 0,
+        "label": "tissue_high",
+        "level": 4,
+        "src": {"class": "File", "path": "test.mrxs"},
+        "filter_slide": tissue_low,
+    }
+    assert tissue.inputs == expected_inputs
