@@ -60,6 +60,11 @@ class WorkflowElement(abc.ABC):
     def out_binding(self) -> Binding:
         ...
 
+    @property
+    @abc.abstractmethod
+    def workflow(self) -> Workflow:
+        ...
+
     def __repr__(self):
         return f"<{self.name}>"
 
@@ -162,6 +167,10 @@ class NXWorkflowElement(WorkflowElement):
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def workflow(self) -> Workflow:
+        return NXWorkflow(self._dag)
 
     @property
     def in_binding(self) -> Binding:
