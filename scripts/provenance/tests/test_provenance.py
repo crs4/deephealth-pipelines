@@ -17,6 +17,7 @@ from provenance import (
 date_isoformat = "2022-01-01T00:00:00"
 
 tumor_serialized = {
+    "name": "tumor",
     "model": "mdrio/slaid:1.0.0-tumor_model-level_1-cudnn",
     "params": {
         "batch-size": None,
@@ -29,6 +30,11 @@ tumor_serialized = {
     "start_date": date_isoformat,
     "end_date": date_isoformat,
 }
+
+
+@pytest.fixture
+def dates_path():
+    return "tests/data/dates.json"
 
 
 @pytest.fixture
@@ -67,8 +73,13 @@ def date():
 
 
 @pytest.fixture
-def dates(date):
-    return defaultdict(lambda: (date, date))
+def dates(dates_path):
+    dates = json.load(open(dates_path, "r"))
+    for k, v in dates.items():
+        start_date, end_date = v
+        dates[k] = [date_parse(start_date), date_parse(end_date)]
+
+    return dates
 
 
 def test_workflow(workflow):
@@ -230,8 +241,14 @@ def test_promort_serializer(artefact, expected_out):
         )
     ],
 )
-def test_main(workflow_path: str, params_path: str, name: str, date, expected_out):
-    date = date.isoformat()
-    out = main(workflow_path, params_path, name, date, date)
+def test_main(
+    name: str, workflow_path: str, params_path: str, dates_path, expected_out
+):
+    out = main(
+        name,
+        workflow_path=workflow_path,
+        params_path=params_path,
+        dates_path=dates_path,
+    )
 
     assert out == json.dumps(expected_out)

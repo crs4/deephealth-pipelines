@@ -319,6 +319,11 @@ class ArtefactFactory:
     params: Dict[str, Union[str, float, Dict]]
     dates: Dict[str, Tuple[dt.datetime, dt.datetime]]
 
+    def __post_init__(self):
+        default_dates = defaultdict(lambda: (None, None))
+        default_dates.update(self.dates)
+        self.dates = default_dates
+
     def get(self, name: str = None) -> Union[Artefact, List[Artefact]]:
         artefacts = {}
         outputs = self.worflow.outputs() if name is None else [self.worflow.nodes(name)]
@@ -373,27 +378,34 @@ class PromortArtefactSerializer(ArtefactSerializer):
                 params[k] = v
         return json.dumps(
             {
+                "name": artefact.name,
                 "model": model,
                 "params": params,
-                "start_date": artefact.start_date.isoformat(),
-                "end_date": artefact.end_date.isoformat(),
+                "start_date": artefact.start_date.isoformat()
+                if artefact.start_date
+                else None,
+                "end_date": artefact.end_date.isoformat()
+                if artefact.end_date
+                else None,
             }
         )
 
 
 def main(
+    artefact_name: str,
+    *,
     workflow_path: str,
     params_path: str,
-    artefact_name: str,
-    start_date: str,
-    end_date: str,
+    dates_path: str,
 ):
-    dates = defaultdict(lambda: (None, None))
-    dates[artefact_name] = (date_parse(start_date), date_parse(end_date))
     cwl_workflow = cwl_parser.load_document_by_uri(workflow_path)
 
     workflow = NXWorkflowFactory(cwl_workflow).get()
     params = json.load(open(params_path, "r"))
+    dates = json.load(open(dates_path, "r"))
+    for k, v in dates.items():
+        start_date, end_date = v
+        dates[k] = [date_parse(start_date), date_parse(end_date)]
     artefact = ArtefactFactory(workflow, params, dates).get(artefact_name)
     return PromortArtefactSerializer().serialize(artefact)
 
