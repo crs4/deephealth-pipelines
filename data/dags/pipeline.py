@@ -108,7 +108,7 @@ def create_dag():
                 )(prediction.value, slide, prediction_label, omero_id, report_dir)
 
                 if prediction == Prediction.TUMOR:
-                    tumor_branch(prediction_label, prediction, slide)
+                    tumor_branch(prediction_label, prediction, slide, report_dir)
                 elif prediction == Prediction.TISSUE:
                     tissue_branch(prediction_label, prediction_path, prediction_id)
         return dag
@@ -310,7 +310,7 @@ def convert_to_tiledb(dataset_label):
     return docker_run(command, DOCKER_NETWORK)
 
 
-def tumor_branch(prediction_label, prediction, slide_label):
+def tumor_branch(prediction_label, prediction, slide_label, report_dir):
 
     register_to_omero = task(
         _register_prediction_to_omero,
@@ -326,6 +326,7 @@ def tumor_branch(prediction_label, prediction, slide_label):
         slide_label,
         f"{prediction_label}.tiledb",
         omero_id,
+        report_dir=report_dir,
         review_required=True,
     )
 
