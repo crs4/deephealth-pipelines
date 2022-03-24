@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import datetime as dt
 import json
-from collections import defaultdict
 
 import pytest
 from cwl_utils.parser import load_document_by_uri
