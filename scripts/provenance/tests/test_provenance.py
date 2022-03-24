@@ -3,7 +3,7 @@
 import json
 
 import pytest
-from provenance import NXWorkflowFactory, ArtefactFactory
+from provenance import NXWorkflowFactory, ArtefactFactory, PromortArtefactSerializer
 from cwl_utils.parser import load_document_by_uri
 
 
@@ -20,6 +20,11 @@ def workflow(cwl_workflow):
 @pytest.fixture
 def params():
     return json.load(open("tests/data/params.json", "r"))
+
+
+@pytest.fixture
+def artefact(workflow, params, name):
+    return ArtefactFactory(workflow, params).get(name)
 
 
 def test_workflow(workflow):
@@ -155,3 +160,27 @@ def test_artefacts(workflow, params):
     assert tissue.inputs == expected_inputs
     assert tissue.command == None
     assert tissue.docker_image == "mdrio/slaid:1.0.0-tissue_model-eddl_2-cudnn"
+
+
+@pytest.mark.parametrize(
+    "name,expected_out",
+    [
+        (
+            "tumor",
+            {
+                "model": "mdrio/slaid:1.0.0-tumor_model-level_1-cudnn",
+                "params": {
+                    "batch-size": None,
+                    "chunk-size": None,
+                    "filter": "tissue_low>0.8",
+                    "gpu": 0,
+                    "label": "tumor",
+                    "level": 1,
+                },
+            },
+        )
+    ],
+)
+def test_promort_serializer(artefact, expected_out):
+    serializer = PromortArtefactSerializer()
+    assert serializer.serialize(artefact) == json.dumps(expected_out)

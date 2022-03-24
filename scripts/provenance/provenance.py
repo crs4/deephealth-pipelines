@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import abc
+import json
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Literal, NewType, Optional, TypedDict, Union, get_args
@@ -9,6 +11,7 @@ from typing import Dict, List, Literal, NewType, Optional, TypedDict, Union, get
 import cwl_utils.parser as cwl_parser
 import networkx as nx
 
+logger = logging.getLogger()
 DockerImage = NewType("DockerImage", str)
 Output = NewType("Output", str)
 Binding = NewType("Binding", Dict[str, "WorkflowElement"])
@@ -276,7 +279,7 @@ class NXWorkflowFactory(WorkflowFactory):
         return docker_image
 
 
-Input = Union[str, int, float, "Artefact", None]
+Input = Union[str, int, float, "Artefact", Dict, None]
 
 
 @dataclass
@@ -327,3 +330,33 @@ class ArtefactFactory:
             inputs,
         )
         artefacts[inout.name] = artefact
+
+
+class ArtefactSerializer(abc.ABC):
+    @abc.abstractmethod
+    def serialize(self, artefact: Artefact) -> str:
+        ...
+
+
+class PromortArtefactSerializer(ArtefactSerializer):
+    def serialize(self, artefact: Artefact) -> str:
+        model = artefact.workflow_step.docker_image
+        params = {}
+        for k, v in artefact.inputs.items():
+            if isinstance(v, Artefact):
+                ...
+            elif isinstance(v, Dict):
+                try:
+                    params["slide"] = v["slide"]["path"]
+                except KeyError:
+                    logger.error("skipping param %s:%s", k, v)
+            else:
+                params[k] = v
+        return json.dumps({"model": model, "params": params})
+
+
+def main(workflow_path: str, params_path: str, artefact_name: str):
+    cwl_workflow = cwl_parser.load_document_by_uri(workflow_path)
+    workflow = NXWorkflowFactory(cwl_workflow).get()
+    params = json.load(open(params_path, "r"))
+    artefact = ArtefactFactory(workflow, params).get(artefact_name)
