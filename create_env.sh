@@ -46,6 +46,9 @@ cd scripts/prov_crate
 docker build . -t prov_crate
 cd -
 
+cd ../provenance
+docker build . -t dh/provenance
+
 docker pull ubuntu:20.04
 
 if [ ! -z "$PROMORT_IMG" ]; then
