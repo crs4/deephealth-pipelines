@@ -5,6 +5,7 @@ import abc
 import datetime as dt
 import json
 import logging
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import (
@@ -19,8 +20,10 @@ from typing import (
     get_args,
 )
 
+import clize
 import cwl_utils.parser as cwl_parser
 import networkx as nx
+from dateutil.parser import parse as date_parse
 
 logger = logging.getLogger()
 DockerImage = NewType("DockerImage", str)
@@ -378,8 +381,23 @@ class PromortArtefactSerializer(ArtefactSerializer):
         )
 
 
-def main(workflow_path: str, params_path: str, artefact_name: str):
+def main(
+    workflow_path: str,
+    params_path: str,
+    artefact_name: str,
+    start_date: str,
+    end_date: str,
+):
+    dates = defaultdict(lambda: (None, None))
+    dates[artefact_name] = (date_parse(start_date), date_parse(end_date))
     cwl_workflow = cwl_parser.load_document_by_uri(workflow_path)
+
     workflow = NXWorkflowFactory(cwl_workflow).get()
     params = json.load(open(params_path, "r"))
-    artefact = ArtefactFactory(workflow, params).get(artefact_name)
+    artefact = ArtefactFactory(workflow, params, dates).get(artefact_name)
+    return PromortArtefactSerializer().serialize(artefact)
+
+
+if __name__ == "__main__":
+    output = clize.run(main)
+    print(output)

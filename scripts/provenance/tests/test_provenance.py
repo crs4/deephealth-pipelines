@@ -1,19 +1,44 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import datetime as dt
-from dateutil.parser import parse as date_parse
 import json
 from collections import defaultdict
 
 import pytest
 from cwl_utils.parser import load_document_by_uri
+from dateutil.parser import parse as date_parse
+from provenance import (
+    ArtefactFactory,
+    NXWorkflowFactory,
+    PromortArtefactSerializer,
+    main,
+)
 
-from provenance import ArtefactFactory, NXWorkflowFactory, PromortArtefactSerializer
+date_isoformat = "2022-01-01T00:00:00"
+
+tumor_serialized = {
+    "model": "mdrio/slaid:1.0.0-tumor_model-level_1-cudnn",
+    "params": {
+        "batch-size": None,
+        "chunk-size": None,
+        "filter": "tissue_low>0.8",
+        "gpu": 0,
+        "label": "tumor",
+        "level": 1,
+    },
+    "start_date": date_isoformat,
+    "end_date": date_isoformat,
+}
 
 
 @pytest.fixture
-def cwl_workflow():
-    return load_document_by_uri("tests/data/predictions.cwl")
+def workflow_path():
+    return "tests/data/predictions.cwl"
+
+
+@pytest.fixture
+def cwl_workflow(workflow_path):
+    return load_document_by_uri(workflow_path)
 
 
 @pytest.fixture
@@ -22,8 +47,13 @@ def workflow(cwl_workflow):
 
 
 @pytest.fixture
-def params():
-    return json.load(open("tests/data/params.json", "r"))
+def params_path():
+    return "tests/data/params.json"
+
+
+@pytest.fixture
+def params(params_path):
+    return json.load(open(params_path, "r"))
 
 
 @pytest.fixture
@@ -33,7 +63,7 @@ def artefact(workflow, params, name, dates):
 
 @pytest.fixture
 def date():
-    return date_parse("2022-01-01")
+    return date_parse(date_isoformat)
 
 
 @pytest.fixture
@@ -182,22 +212,26 @@ def test_artefacts(workflow, params, dates):
     [
         (
             "tumor",
-            {
-                "model": "mdrio/slaid:1.0.0-tumor_model-level_1-cudnn",
-                "params": {
-                    "batch-size": None,
-                    "chunk-size": None,
-                    "filter": "tissue_low>0.8",
-                    "gpu": 0,
-                    "label": "tumor",
-                    "level": 1,
-                },
-                "start_date": "2022-01-01T00:00:00",
-                "end_date": "2022-01-01T00:00:00",
-            },
+            tumor_serialized,
         )
     ],
 )
 def test_promort_serializer(artefact, expected_out):
     serializer = PromortArtefactSerializer()
     assert serializer.serialize(artefact) == json.dumps(expected_out)
+
+
+@pytest.mark.parametrize(
+    "name,expected_out",
+    [
+        (
+            "tumor",
+            tumor_serialized,
+        )
+    ],
+)
+def test_main(workflow_path: str, params_path: str, name: str, date, expected_out):
+    date = date.isoformat()
+    out = main(workflow_path, params_path, name, date, date)
+
+    assert out == json.dumps(expected_out)
