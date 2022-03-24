@@ -371,7 +371,7 @@ class PromortArtefactSerializer(ArtefactSerializer):
                 ...
             elif isinstance(v, Dict):
                 try:
-                    params["slide"] = v["slide"]["path"]
+                    params["slide"] = v["path"]
                 except KeyError:
                     logger.error("skipping param %s:%s", k, v)
             else:

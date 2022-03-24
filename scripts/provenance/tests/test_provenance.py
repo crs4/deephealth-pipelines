@@ -26,6 +26,7 @@ tumor_serialized = {
         "gpu": 0,
         "label": "tumor",
         "level": 1,
+        "slide": "test.mrxs",
     },
     "start_date": date_isoformat,
     "end_date": date_isoformat,
