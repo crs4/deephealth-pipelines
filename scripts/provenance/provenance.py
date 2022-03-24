@@ -2,11 +2,22 @@
 # -*- coding: utf-8 -*-
 
 import abc
+import datetime as dt
 import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Literal, NewType, Optional, TypedDict, Union, get_args
+from typing import (
+    Dict,
+    List,
+    Literal,
+    NewType,
+    Optional,
+    Tuple,
+    TypedDict,
+    Union,
+    get_args,
+)
 
 import cwl_utils.parser as cwl_parser
 import networkx as nx
@@ -287,6 +298,8 @@ class Artefact:
     name: str
     workflow_step: WorkflowStep
     inputs: Dict[str, Input]
+    start_date: dt.datetime
+    end_date: dt.datetime
 
     @property
     def command(self) -> Optional[str]:
@@ -300,7 +313,8 @@ class Artefact:
 @dataclass
 class ArtefactFactory:
     worflow: Workflow
-    params: Dict
+    params: Dict[str, Union[str, float, Dict]]
+    dates: Dict[str, Tuple[dt.datetime, dt.datetime]]
 
     def get(self, name: str = None) -> Union[Artefact, List[Artefact]]:
         artefacts = {}
@@ -328,6 +342,8 @@ class ArtefactFactory:
             artefact_name,
             workflow_step,
             inputs,
+            start_date=self.dates[artefact_name][0],
+            end_date=self.dates[artefact_name][1],
         )
         artefacts[inout.name] = artefact
 
@@ -352,7 +368,14 @@ class PromortArtefactSerializer(ArtefactSerializer):
                     logger.error("skipping param %s:%s", k, v)
             else:
                 params[k] = v
-        return json.dumps({"model": model, "params": params})
+        return json.dumps(
+            {
+                "model": model,
+                "params": params,
+                "start_date": artefact.start_date.isoformat(),
+                "end_date": artefact.end_date.isoformat(),
+            }
+        )
 
 
 def main(workflow_path: str, params_path: str, artefact_name: str):

@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import datetime as dt
+from dateutil.parser import parse as date_parse
 import json
+from collections import defaultdict
 
 import pytest
-from provenance import NXWorkflowFactory, ArtefactFactory, PromortArtefactSerializer
 from cwl_utils.parser import load_document_by_uri
+
+from provenance import ArtefactFactory, NXWorkflowFactory, PromortArtefactSerializer
 
 
 @pytest.fixture
@@ -23,8 +27,18 @@ def params():
 
 
 @pytest.fixture
-def artefact(workflow, params, name):
-    return ArtefactFactory(workflow, params).get(name)
+def artefact(workflow, params, name, dates):
+    return ArtefactFactory(workflow, params, dates).get(name)
+
+
+@pytest.fixture
+def date():
+    return date_parse("2022-01-01")
+
+
+@pytest.fixture
+def dates(date):
+    return defaultdict(lambda: (date, date))
 
 
 def test_workflow(workflow):
@@ -107,8 +121,9 @@ def test_workflow(workflow):
     assert tumor.docker_image == "mdrio/slaid:1.0.0-tumor_model-level_1-cudnn"
 
 
-def test_artefacts(workflow, params):
-    artefact_factory = ArtefactFactory(workflow, params)
+def test_artefacts(workflow, params, dates):
+
+    artefact_factory = ArtefactFactory(workflow, params, dates)
     artefacts = artefact_factory.get()
     assert len(artefacts) == 3
 
@@ -177,6 +192,8 @@ def test_artefacts(workflow, params):
                     "label": "tumor",
                     "level": 1,
                 },
+                "start_date": "2022-01-01T00:00:00",
+                "end_date": "2022-01-01T00:00:00",
             },
         )
     ],
