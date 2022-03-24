@@ -245,10 +245,24 @@ def add_prediction_to_promort(
     slide_label: str,
     prediction_label: str,
     omero_id: str,
-    report_id: str,
+    report_dir: str,
     review_required: bool = False,
 ) -> str:
 
+    provenance = docker_run(
+        [
+            "-v",
+            f"{report_dir}:/data",
+            "dh/provenance",
+            prediction,
+            "--worflow-path",
+            "/data/prediction.cwl",
+            "--params_path",
+            "/data/params.json",
+            "--dates_path",
+            "dates.json",
+        ]
+    )
     command = [
         PROMORT_TOOLS_IMG,
         "importer.py",
@@ -269,6 +283,8 @@ def add_prediction_to_promort(
         prediction.upper(),
         "--omero-id",
         omero_id,
+        "--provenance",
+        provenance,
     ]
     if review_required:
         command.append("--review-required")
@@ -461,6 +477,8 @@ def gather_report(dag_info):
 
     with open(os.path.join(output_dir, params_fn), "w") as params:
         json.dump(airflow_report["workflow_params"], params)
+    # @fixme set real dates
+    json.dump({}, open(os.path.join(output_dir, "dates.json"), "w"))
     return output_dir
 
 
