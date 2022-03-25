@@ -44,5 +44,19 @@ fi
 
 cd scripts/prov_crate
 docker build . -t prov_crate
+cd -
 
 docker pull ubuntu:20.04
+
+if [ ! -z "$PROMORT_IMG" ]; then
+  docker pull ${PROMORT_IMG}
+fi
+
+
+if [ ! -z "$PROMORT_TOOLS_REPO" ]; then
+  cd build/promort_tools-docker
+  docker build -t $PROMORT_TOOLS_IMG --build-arg PROMORT_TOOLS_REPO=$PROMORT_TOOLS_REPO --build-arg PROMORT_TOOLS_BRANCH=$PROMORT_TOOLS_BRANCH .
+  cd -
+else
+  docker pull ${PROMORT_TOOLS_IMG}
+fi
