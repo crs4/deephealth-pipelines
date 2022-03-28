@@ -48,6 +48,7 @@ cd -
 
 cd scripts/provenance
 docker build . -t dh/provenance
+cd -
 
 docker pull ubuntu:20.04
 
