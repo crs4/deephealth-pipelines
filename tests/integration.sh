@@ -45,6 +45,7 @@ cd ..
 [ $(curl http://localhost:4080/ome_seadragon/get/images/index/ | jq length) == 1 ]
 curl -X POST   --cookie-jar /tmp/cookies http://localhost:8888/api/auth/login/ -d '{"username": "$PROMORT_USER", "password": "PROMORT_PASSWORD"}'
 [ $(curl --cookie /tmp/cookies -u $PROMORT_USER:$PROMORT_PASSWORD  http://localhost:8888/api/tissue_fragments_collections/ | jq length) == 1 ]
+[ $(curl --cookie /tmp/cookies -u $PROMORT_USER:$PROMORT_PASSWORD  http://localhost:8888/api/predictions/ | jq "[.[].provenance | length > 0 ] | all") ]
 
 [ $(find data/ -name ro-crate-metadata.json | wc -l)  == 1 ] 
 
