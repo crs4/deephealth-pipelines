@@ -90,7 +90,8 @@ def create_dag():
 
         dag_info = predictions()
         slide_to_promort >> dag_info
-        generate_rocrate(gather_report(dag_info))
+        report_dir = gather_report(dag_info)
+        generate_rocrate(report_dir)
 
         for prediction in Prediction:
             with TaskGroup(group_id=f"add_{prediction.value}_to_backend"):
@@ -104,10 +105,10 @@ def create_dag():
                 prediction_id = task(
                     add_prediction_to_promort,
                     task_id=f"add_{prediction.value}_to_promort",
-                )(prediction.value, slide, prediction_label, omero_id)
+                )(prediction.value, slide, prediction_label, omero_id, report_dir)
 
                 if prediction == Prediction.TUMOR:
-                    tumor_branch(prediction_label, prediction, slide)
+                    tumor_branch(prediction_label, prediction, slide, report_dir)
                 elif prediction == Prediction.TISSUE:
                     tissue_branch(prediction_label, prediction_path, prediction_id)
         return dag
@@ -244,6 +245,7 @@ def add_prediction_to_promort(
     slide_label: str,
     prediction_label: str,
     omero_id: str,
+    report_dir: str = None,
     review_required: bool = False,
 ) -> str:
 
@@ -270,6 +272,22 @@ def add_prediction_to_promort(
     ]
     if review_required:
         command.append("--review-required")
+    if report_dir:
+        provenance = docker_run(
+            [
+                "-v",
+                f"{report_dir}:/data",
+                "dh/provenance",
+                prediction,
+                "--workflow-path",
+                "/data/predictions.cwl",
+                "--params-path",
+                "/data/params.json",
+                "--dates-path",
+                "/data/dates.json",
+            ]
+        )
+        command += ["--provenance", provenance]
 
     logger.info("command %s", command)
     res = docker_run(command, DOCKER_NETWORK)
@@ -292,7 +310,7 @@ def convert_to_tiledb(dataset_label):
     return docker_run(command, DOCKER_NETWORK)
 
 
-def tumor_branch(prediction_label, prediction, slide_label):
+def tumor_branch(prediction_label, prediction, slide_label, report_dir):
 
     register_to_omero = task(
         _register_prediction_to_omero,
@@ -308,6 +326,7 @@ def tumor_branch(prediction_label, prediction, slide_label):
         slide_label,
         f"{prediction_label}.tiledb",
         omero_id,
+        report_dir=report_dir,
         review_required=True,
     )
 
@@ -459,6 +478,18 @@ def gather_report(dag_info):
 
     with open(os.path.join(output_dir, params_fn), "w") as params:
         json.dump(airflow_report["workflow_params"], params)
+
+    # @fixme set real dates
+    start_date = task_predictions.start_date.isoformat()
+    end_date = task_predictions.end_date.isoformat()
+    json.dump(
+        {
+            "tumor": [start_date, end_date],
+            "tissue": [start_date, end_date],
+            "extract-tissue-low/tissue": [start_date, end_date],
+        },
+        open(os.path.join(output_dir, "dates.json"), "w"),
+    )
     return output_dir
 
 
