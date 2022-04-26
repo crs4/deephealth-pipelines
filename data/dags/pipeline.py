@@ -356,6 +356,8 @@ def tissue_segmentation(label, path) -> str:
         out,
         "--scale-func",
         "shapely",
+        "--simplify",
+        "0.8"
     ]
     docker_run(command, DOCKER_NETWORK)
     return out
