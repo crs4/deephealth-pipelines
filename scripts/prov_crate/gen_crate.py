@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2021 CRS4
+# Copyright (c) 2021-2022 CRS4
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -132,7 +132,7 @@ def add_params(params, param_types, metadata, source, crate, action):
             obj = crate.add(ContextEntity(crate, f"#pv-{k}", properties={
                 "@type": "PropertyValue",
                 "name": k,
-                "value": v,
+                "value": str(v),
             }))
         obj["exampleOfWork"] = in_
         objects.append(obj)

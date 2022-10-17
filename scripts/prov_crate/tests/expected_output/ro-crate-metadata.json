@@ -4,7 +4,7 @@
         {
             "@id": "./",
             "@type": "Dataset",
-            "datePublished": "2022-02-28T15:35:39+00:00",
+            "datePublished": "2022-10-17T12:55:48+00:00",
             "hasPart": [
                 {
                     "@id": "predictions.cwl"
@@ -26,7 +26,7 @@
             },
             "mentions": [
                 {
-                    "@id": "#b5aa3374-235a-4741-b20d-99434d5b046d"
+                    "@id": "#53c97d0b-f80c-4d99-a357-58df64517355"
                 }
             ],
             "name": "Promort tissue and tumor prediction"
@@ -126,7 +126,7 @@
             "version": "v1.2"
         },
         {
-            "@id": "#b5aa3374-235a-4741-b20d-99434d5b046d",
+            "@id": "#53c97d0b-f80c-4d99-a357-58df64517355",
             "@type": "CreateAction",
             "endTime": "2021-06-29T16:09:45.814390+00:00",
             "instrument": {
@@ -200,8 +200,7 @@
             "encodingFormat": "https://openslide.org/formats/mirax/",
             "exampleOfWork": {
                 "@id": "#param-slide"
-            },
-            "url": "http://slide-repository:5000/slides/DHT00001-1.mrxs"
+            }
         },
         {
             "@id": "#param-mode",
@@ -231,7 +230,7 @@
                 "@id": "#param-tissue-low-level"
             },
             "name": "tissue-low-level",
-            "value": 9
+            "value": "9"
         },
         {
             "@id": "#param-tissue-low-label",
@@ -261,7 +260,7 @@
                 "@id": "#param-tissue-high-level"
             },
             "name": "tissue-high-level",
-            "value": 8
+            "value": "8"
         },
         {
             "@id": "#param-tissue-low-chunk",
@@ -276,7 +275,7 @@
                 "@id": "#param-tissue-low-chunk"
             },
             "name": "tissue-low-chunk",
-            "value": 256
+            "value": "256"
         },
         {
             "@id": "#param-tissue-high-label",
@@ -321,7 +320,7 @@
                 "@id": "#param-tissue-high-chunk"
             },
             "name": "tissue-high-chunk",
-            "value": 1536
+            "value": "1536"
         },
         {
             "@id": "#param-tumor-chunk",
@@ -336,7 +335,7 @@
                 "@id": "#param-tumor-chunk"
             },
             "name": "tumor-chunk",
-            "value": 1536
+            "value": "1536"
         },
         {
             "@id": "#param-gpu",
@@ -351,7 +350,7 @@
                 "@id": "#param-gpu"
             },
             "name": "gpu",
-            "value": 0
+            "value": "0"
         },
         {
             "@id": "#param-tumor-level",
@@ -366,7 +365,7 @@
                 "@id": "#param-tumor-level"
             },
             "name": "tumor-level",
-            "value": 1
+            "value": "1"
         },
         {
             "@id": "#param-tumor-label",
