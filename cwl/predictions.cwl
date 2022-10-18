@@ -32,67 +32,7 @@ outputs:
 
 steps:
   extract-tissue-low:
-    run: &extract_tissue
-      cwlVersion: v1.1
-      class: CommandLineTool
-      requirements:
-        InlineJavascriptRequirement: {}
-        DockerRequirement:
-          dockerPull: crs4/slaid:1.1.0-beta.25-tissue_model-eddl_2-cudnn
-
-        InitialWorkDirRequirement:
-          listing:
-            -  $(inputs.src)
-      inputs:
-        src:
-          type: File
-          inputBinding:
-            position: 1
-          secondaryFiles:
-            - pattern: |-
-                ${
-                  if (self.nameext == '.mrxs') {
-                    return {
-                    class: "File",
-                    location: self.location.match(/.*\//)[0] + "/" + self.nameroot,
-                    basename: self.nameroot};
-                  }
-                  else return null;
-                }
-              required: false
-        level:
-          type: int
-          inputBinding:
-            prefix: -l
-        label:
-          type: string
-          inputBinding:
-            prefix: -L
-        filter_slide:
-          type: File?
-          inputBinding:
-            prefix: --filter-slide
-        filter:
-          type: string?
-          inputBinding:
-            prefix: -F
-        gpu:
-          type: int?
-          inputBinding:
-            prefix: --gpu
-        chunk-size:
-          type: int?
-        batch-size:
-          type: int?
-
-      arguments: ["fixed-batch","-o", $(runtime.outdir), '--writer', 'zip']
-      outputs:
-        tissue:
-          type: File
-          outputBinding:
-            glob: '$(inputs.src.basename).zip'
-            outputEval: ${self[0].basename=inputs.label + '.zip'; return self;}
-
+    run: extract_tissue.cwl
     in:
       src: slide
       level: tissue-low-level
@@ -103,7 +43,7 @@ steps:
     out: [tissue]
 
   extract-tissue-high:
-    run: *extract_tissue
+    run: extract_tissue.cwl
     in:
       src: slide
       level: tissue-high-level
@@ -115,68 +55,8 @@ steps:
       batch: tissue-high-batch-size
     out: [tissue]
 
-
   classify-tumor:
-    run: 
-      cwlVersion: v1.1
-      class: CommandLineTool
-      requirements:
-        InlineJavascriptRequirement: {}
-        DockerRequirement:
-          dockerPull: crs4/slaid:1.1.0-beta.25-tumor_model-level_1-v2.2-cudnn
-        InitialWorkDirRequirement:
-          listing:
-            -  $(inputs.src)
-      inputs:
-        src:
-          type: File
-          inputBinding:
-            position: 1
-          secondaryFiles:
-            - pattern: |-
-                ${
-                  if (self.nameext == '.mrxs') {
-                    return {
-                    class: "File",
-                    location: self.location.match(/.*\//)[0] + "/" + self.nameroot,
-                    basename: self.nameroot};
-                  }
-                  else return null;
-                }
-              required: false
-
-        level:
-          type: int
-          inputBinding:
-            prefix: -l
-        label:
-          type: string
-          inputBinding:
-            prefix: -L
-        filter_slide:
-          type: File?
-          inputBinding:
-            prefix: --filter-slide
-        filter:
-          type: string?
-          inputBinding:
-            prefix: -F
-        gpu:
-          type: int?
-          inputBinding:
-            prefix: --gpu
-        chunk-size:
-          type: int?
-        batch-size:
-          type: int?
-
-      arguments: ["fixed-batch","-o", $(runtime.outdir), '--writer', 'zip']
-      outputs:
-        tumor:
-          type: File
-          outputBinding:
-            glob: '$(inputs.src.basename).zip'
-            outputEval: ${self[0].basename=inputs.label + '.zip'; return self;}
+    run: classify_tumor.cwl
     in:
       src: slide
       level: tumor-level
