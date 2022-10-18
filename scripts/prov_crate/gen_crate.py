@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2021 CRS4
+# Copyright (c) 2021-2022 CRS4
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -112,7 +112,7 @@ def add_params(params, param_types, metadata, source, crate, action):
     inputs, outputs, objects, results = [], [], [], []
     for k, v in params.items():
         add_type = "ImageObject" if k == "slide" else param_types[k]
-        in_ = crate.add(ContextEntity(crate, f"#param-{k}", properties={
+        in_ = crate.add(ContextEntity(crate, f"{workflow.id}#{k}", properties={
             "@type": "FormalParameter",
             "name": k,
             "additionalType": add_type,
@@ -132,7 +132,7 @@ def add_params(params, param_types, metadata, source, crate, action):
             obj = crate.add(ContextEntity(crate, f"#pv-{k}", properties={
                 "@type": "PropertyValue",
                 "name": k,
-                "value": v,
+                "value": str(v),
             }))
         obj["exampleOfWork"] = in_
         objects.append(obj)
@@ -141,7 +141,7 @@ def add_params(params, param_types, metadata, source, crate, action):
     for k, v in metadata["outs"].items():
         assert v["class"] == "File"
         assert k not in params  # so that IDs are unique
-        out = crate.add(ContextEntity(crate, f"#param-{k}", properties={
+        out = crate.add(ContextEntity(crate, f"{workflow.id}#{k}", properties={
             "@type": "FormalParameter",
             "name": k,
             "additionalType": "ImageObject",

@@ -4,7 +4,7 @@
         {
             "@id": "./",
             "@type": "Dataset",
-            "datePublished": "2022-02-28T15:35:39+00:00",
+            "datePublished": "2022-10-17T13:25:19+00:00",
             "hasPart": [
                 {
                     "@id": "predictions.cwl"
@@ -26,7 +26,7 @@
             },
             "mentions": [
                 {
-                    "@id": "#b5aa3374-235a-4741-b20d-99434d5b046d"
+                    "@id": "#a9f2f0c5-32da-4547-813d-e10f58c9502e"
                 }
             ],
             "name": "Promort tissue and tumor prediction"
@@ -55,55 +55,55 @@
             ],
             "input": [
                 {
-                    "@id": "#param-slide"
+                    "@id": "predictions.cwl#slide"
                 },
                 {
-                    "@id": "#param-mode"
+                    "@id": "predictions.cwl#mode"
                 },
                 {
-                    "@id": "#param-tissue-low-level"
+                    "@id": "predictions.cwl#tissue-low-level"
                 },
                 {
-                    "@id": "#param-tissue-low-label"
+                    "@id": "predictions.cwl#tissue-low-label"
                 },
                 {
-                    "@id": "#param-tissue-high-level"
+                    "@id": "predictions.cwl#tissue-high-level"
                 },
                 {
-                    "@id": "#param-tissue-low-chunk"
+                    "@id": "predictions.cwl#tissue-low-chunk"
                 },
                 {
-                    "@id": "#param-tissue-high-label"
+                    "@id": "predictions.cwl#tissue-high-label"
                 },
                 {
-                    "@id": "#param-tissue-high-filter"
+                    "@id": "predictions.cwl#tissue-high-filter"
                 },
                 {
-                    "@id": "#param-tissue-high-chunk"
+                    "@id": "predictions.cwl#tissue-high-chunk"
                 },
                 {
-                    "@id": "#param-tumor-chunk"
+                    "@id": "predictions.cwl#tumor-chunk"
                 },
                 {
-                    "@id": "#param-gpu"
+                    "@id": "predictions.cwl#gpu"
                 },
                 {
-                    "@id": "#param-tumor-level"
+                    "@id": "predictions.cwl#tumor-level"
                 },
                 {
-                    "@id": "#param-tumor-label"
+                    "@id": "predictions.cwl#tumor-label"
                 },
                 {
-                    "@id": "#param-tumor-filter"
+                    "@id": "predictions.cwl#tumor-filter"
                 }
             ],
             "name": "Promort tissue and tumor prediction",
             "output": [
                 {
-                    "@id": "#param-tissue"
+                    "@id": "predictions.cwl#tissue"
                 },
                 {
-                    "@id": "#param-tumor"
+                    "@id": "predictions.cwl#tumor"
                 }
             ],
             "programmingLanguage": {
@@ -126,7 +126,7 @@
             "version": "v1.2"
         },
         {
-            "@id": "#b5aa3374-235a-4741-b20d-99434d5b046d",
+            "@id": "#a9f2f0c5-32da-4547-813d-e10f58c9502e",
             "@type": "CreateAction",
             "endTime": "2021-06-29T16:09:45.814390+00:00",
             "instrument": {
@@ -188,7 +188,7 @@
             "startTime": "2021-06-29T16:07:14.873427+00:00"
         },
         {
-            "@id": "#param-slide",
+            "@id": "predictions.cwl#slide",
             "@type": "FormalParameter",
             "additionalType": "ImageObject",
             "encodingFormat": "https://openslide.org/formats/mirax/",
@@ -199,12 +199,11 @@
             "@type": "File",
             "encodingFormat": "https://openslide.org/formats/mirax/",
             "exampleOfWork": {
-                "@id": "#param-slide"
-            },
-            "url": "http://slide-repository:5000/slides/DHT00001-1.mrxs"
+                "@id": "predictions.cwl#slide"
+            }
         },
         {
-            "@id": "#param-mode",
+            "@id": "predictions.cwl#mode",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "mode"
@@ -213,13 +212,13 @@
             "@id": "#pv-mode",
             "@type": "PropertyValue",
             "exampleOfWork": {
-                "@id": "#param-mode"
+                "@id": "predictions.cwl#mode"
             },
             "name": "mode",
             "value": "serial"
         },
         {
-            "@id": "#param-tissue-low-level",
+            "@id": "predictions.cwl#tissue-low-level",
             "@type": "FormalParameter",
             "additionalType": "Integer",
             "name": "tissue-low-level"
@@ -228,13 +227,13 @@
             "@id": "#pv-tissue-low-level",
             "@type": "PropertyValue",
             "exampleOfWork": {
-                "@id": "#param-tissue-low-level"
+                "@id": "predictions.cwl#tissue-low-level"
             },
             "name": "tissue-low-level",
-            "value": 9
+            "value": "9"
         },
         {
-            "@id": "#param-tissue-low-label",
+            "@id": "predictions.cwl#tissue-low-label",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tissue-low-label"
@@ -243,13 +242,13 @@
             "@id": "#pv-tissue-low-label",
             "@type": "PropertyValue",
             "exampleOfWork": {
-                "@id": "#param-tissue-low-label"
+                "@id": "predictions.cwl#tissue-low-label"
             },
             "name": "tissue-low-label",
             "value": "tissue_low"
         },
         {
-            "@id": "#param-tissue-high-level",
+            "@id": "predictions.cwl#tissue-high-level",
             "@type": "FormalParameter",
             "additionalType": "Integer",
             "name": "tissue-high-level"
@@ -258,13 +257,13 @@
             "@id": "#pv-tissue-high-level",
             "@type": "PropertyValue",
             "exampleOfWork": {
-                "@id": "#param-tissue-high-level"
+                "@id": "predictions.cwl#tissue-high-level"
             },
             "name": "tissue-high-level",
-            "value": 8
+            "value": "8"
         },
         {
-            "@id": "#param-tissue-low-chunk",
+            "@id": "predictions.cwl#tissue-low-chunk",
             "@type": "FormalParameter",
             "additionalType": "Integer",
             "name": "tissue-low-chunk"
@@ -273,13 +272,13 @@
             "@id": "#pv-tissue-low-chunk",
             "@type": "PropertyValue",
             "exampleOfWork": {
-                "@id": "#param-tissue-low-chunk"
+                "@id": "predictions.cwl#tissue-low-chunk"
             },
             "name": "tissue-low-chunk",
-            "value": 256
+            "value": "256"
         },
         {
-            "@id": "#param-tissue-high-label",
+            "@id": "predictions.cwl#tissue-high-label",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tissue-high-label"
@@ -288,13 +287,13 @@
             "@id": "#pv-tissue-high-label",
             "@type": "PropertyValue",
             "exampleOfWork": {
-                "@id": "#param-tissue-high-label"
+                "@id": "predictions.cwl#tissue-high-label"
             },
             "name": "tissue-high-label",
             "value": "tissue_high"
         },
         {
-            "@id": "#param-tissue-high-filter",
+            "@id": "predictions.cwl#tissue-high-filter",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tissue-high-filter"
@@ -303,13 +302,13 @@
             "@id": "#pv-tissue-high-filter",
             "@type": "PropertyValue",
             "exampleOfWork": {
-                "@id": "#param-tissue-high-filter"
+                "@id": "predictions.cwl#tissue-high-filter"
             },
             "name": "tissue-high-filter",
             "value": "tissue_low>1"
         },
         {
-            "@id": "#param-tissue-high-chunk",
+            "@id": "predictions.cwl#tissue-high-chunk",
             "@type": "FormalParameter",
             "additionalType": "Integer",
             "name": "tissue-high-chunk"
@@ -318,13 +317,13 @@
             "@id": "#pv-tissue-high-chunk",
             "@type": "PropertyValue",
             "exampleOfWork": {
-                "@id": "#param-tissue-high-chunk"
+                "@id": "predictions.cwl#tissue-high-chunk"
             },
             "name": "tissue-high-chunk",
-            "value": 1536
+            "value": "1536"
         },
         {
-            "@id": "#param-tumor-chunk",
+            "@id": "predictions.cwl#tumor-chunk",
             "@type": "FormalParameter",
             "additionalType": "Integer",
             "name": "tumor-chunk"
@@ -333,13 +332,13 @@
             "@id": "#pv-tumor-chunk",
             "@type": "PropertyValue",
             "exampleOfWork": {
-                "@id": "#param-tumor-chunk"
+                "@id": "predictions.cwl#tumor-chunk"
             },
             "name": "tumor-chunk",
-            "value": 1536
+            "value": "1536"
         },
         {
-            "@id": "#param-gpu",
+            "@id": "predictions.cwl#gpu",
             "@type": "FormalParameter",
             "additionalType": "Integer",
             "name": "gpu"
@@ -348,13 +347,13 @@
             "@id": "#pv-gpu",
             "@type": "PropertyValue",
             "exampleOfWork": {
-                "@id": "#param-gpu"
+                "@id": "predictions.cwl#gpu"
             },
             "name": "gpu",
-            "value": 0
+            "value": "0"
         },
         {
-            "@id": "#param-tumor-level",
+            "@id": "predictions.cwl#tumor-level",
             "@type": "FormalParameter",
             "additionalType": "Integer",
             "name": "tumor-level"
@@ -363,13 +362,13 @@
             "@id": "#pv-tumor-level",
             "@type": "PropertyValue",
             "exampleOfWork": {
-                "@id": "#param-tumor-level"
+                "@id": "predictions.cwl#tumor-level"
             },
             "name": "tumor-level",
-            "value": 1
+            "value": "1"
         },
         {
-            "@id": "#param-tumor-label",
+            "@id": "predictions.cwl#tumor-label",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tumor-label"
@@ -378,13 +377,13 @@
             "@id": "#pv-tumor-label",
             "@type": "PropertyValue",
             "exampleOfWork": {
-                "@id": "#param-tumor-label"
+                "@id": "predictions.cwl#tumor-label"
             },
             "name": "tumor-label",
             "value": "tumor"
         },
         {
-            "@id": "#param-tumor-filter",
+            "@id": "predictions.cwl#tumor-filter",
             "@type": "FormalParameter",
             "additionalType": "Text",
             "name": "tumor-filter"
@@ -393,13 +392,13 @@
             "@id": "#pv-tumor-filter",
             "@type": "PropertyValue",
             "exampleOfWork": {
-                "@id": "#param-tumor-filter"
+                "@id": "predictions.cwl#tumor-filter"
             },
             "name": "tumor-filter",
             "value": "tissue_low>1"
         },
         {
-            "@id": "#param-tissue",
+            "@id": "predictions.cwl#tissue",
             "@type": "FormalParameter",
             "additionalType": "ImageObject",
             "encodingFormat": "https://zarr.readthedocs.io/en/stable/spec/v2.html",
@@ -411,11 +410,11 @@
             "contentSize": 4099,
             "encodingFormat": "https://zarr.readthedocs.io/en/stable/spec/v2.html",
             "exampleOfWork": {
-                "@id": "#param-tissue"
+                "@id": "predictions.cwl#tissue"
             }
         },
         {
-            "@id": "#param-tumor",
+            "@id": "predictions.cwl#tumor",
             "@type": "FormalParameter",
             "additionalType": "ImageObject",
             "encodingFormat": "https://zarr.readthedocs.io/en/stable/spec/v2.html",
@@ -427,7 +426,7 @@
             "contentSize": 70100,
             "encodingFormat": "https://zarr.readthedocs.io/en/stable/spec/v2.html",
             "exampleOfWork": {
-                "@id": "#param-tumor"
+                "@id": "predictions.cwl#tumor"
             }
         }
     ]
