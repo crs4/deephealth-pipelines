@@ -38,7 +38,7 @@ def dates_path():
 
 @pytest.fixture
 def workflow_path():
-    return "tests/data/predictions.cwl"
+    return "../../cwl/predictions.cwl"
 
 
 @pytest.fixture
