@@ -51,8 +51,8 @@ steps:
       filter_slide: extract-tissue-low/tissue
       filter: tissue-high-filter
       gpu: gpu
-      chunk: tissue-high-chunk-size
-      batch: tissue-high-batch-size
+      chunk-size: tissue-high-chunk-size
+      batch-size: tissue-high-batch-size
     out: [tissue]
 
   classify-tumor:
