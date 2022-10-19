@@ -29,8 +29,17 @@
       # - uses: satackey/action-docker-layer-caching@v0.0.11
       #   continue-on-error: true
 
-      - name: test
-        run: cd tests && ./run_all.sh
+      - name: test rocrate
+        run: cd tests && ./rocrate.sh
+
+      - name: test importer
+        run: cd tests && ./importer.sh
+
+      - name: test provenance
+        run: cd tests && ./provenance.sh
+
+      - name: test integration
+        run: cd tests && ./integration.sh
 
       - name: Bump version and push tag
         if: ${{ github.event_name == 'push' }}
