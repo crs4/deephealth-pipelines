@@ -1,8 +1,24 @@
 cwlVersion: v1.1
 class: Workflow
 
+requirements:
+  InlineJavascriptRequirement: {}
+
 inputs:
-  slide: File
+  slide:
+    type: File
+    secondaryFiles:
+      - pattern: |-
+          ${
+            if (self.nameext == '.mrxs') {
+              return {
+              class: "File",
+              location: self.location.match(/.*\//)[0] + "/" + self.nameroot,
+              basename: self.nameroot};
+            }
+            else return null;
+          }
+        required: false
   tissue-low-level: int
   tissue-low-label: string
   tissue-low-chunk-size: int?
