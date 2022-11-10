@@ -12,7 +12,7 @@ inputs:
           ${
             if (self.nameext == '.mrxs') {
               return {
-              class: "File",
+              class: "Directory",
               location: self.location.match(/.*\//)[0] + "/" + self.nameroot,
               basename: self.nameroot};
             }
