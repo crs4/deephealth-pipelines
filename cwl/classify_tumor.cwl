@@ -17,7 +17,7 @@ inputs:
           ${
             if (self.nameext == '.mrxs') {
               return {
-              class: "File",
+              class: "Directory",
               location: self.location.match(/.*\//)[0] + "/" + self.nameroot,
               basename: self.nameroot};
             }
@@ -56,4 +56,4 @@ outputs:
     type: File
     outputBinding:
       glob: '$(inputs.src.basename).zip'
-      outputEval: ${self[0].basename=inputs.label + '.zip'; return self;}
+      outputEval: ${self[0].basename=inputs.label + '.zip'; return self[0];}
