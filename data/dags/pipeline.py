@@ -43,6 +43,8 @@ DOCKER_NETWORK = Variable.get("DOCKER_NETWORK", default_var="")
 
 PROMORT_TOOLS_IMG = Variable.get("PROMORT_TOOLS_IMG")
 
+PROVENANCE = Variable.get("PROVENANCE", default_var=False)
+
 
 def handle_error(ctx):
     slide = ctx["params"]["slide"]
@@ -272,7 +274,7 @@ def add_prediction_to_promort(
     ]
     if review_required:
         command.append("--review-required")
-    if report_dir:
+    if report_dir and PROVENANCE:
         provenance = docker_run(
             [
                 "-v",
